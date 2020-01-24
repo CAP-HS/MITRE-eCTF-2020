@@ -11,7 +11,7 @@ Please note: if any step fails, it is highly unlikely that the process will get 
 git clone https://github.com/mitre-cyber-academy/2020-ectf-insecure-example --recursive
 ``` 
 
-Create your team branch. All your development should be pushed to the team branch frist and then you should create a pull request to the master.
+Create your team branch. All your development should be pushed to the team branch first, and then you should create a pull request to the master.
 
 
 
