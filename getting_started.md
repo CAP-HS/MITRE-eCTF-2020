@@ -11,7 +11,8 @@ Please note: if any step fails, it is highly unlikely that the process will get 
 git clone https://github.com/mitre-cyber-academy/2020-ectf-insecure-example --recursive
 ``` 
 
-You can now fetch and push as you normally would using `git fetch origin` and `git push origin`.
+Create your team branch. All your development should be pushed to the team branch frist and then you should create a pull request to the master.
+
 
 
 ## Download Xilinx Tools
