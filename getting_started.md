@@ -8,7 +8,7 @@ Please note: if any step fails, it is highly unlikely that the process will get 
 
 1. Clone the eCTF repository using ssh or https 
 ```bash
-git clone https://github.com/mitre-cyber-academy/2020-ectf-insecure-example --recursive
+git clone https://github.com/CAP-HS/MITRE-eCTF-2020.git --recursive
 ``` 
 
 Create your team branch. All your development should be pushed to the team branch first, and then you should create a pull request to the master.
