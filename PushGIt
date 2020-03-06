@@ -1,0 +1,11 @@
+echo "Type description of changes"
+read changes
+
+git status
+
+git add --all
+
+git commit -a -m $changes
+
+#Push to your own local branch
+#git push origin DOJV
