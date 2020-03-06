@@ -8,4 +8,4 @@ git add --all
 git commit -a -m "$changes"
 
 #Push to your own local branch
-git push origin DOJV
+git push origin $1
