@@ -2,20 +2,10 @@
 """
 Description: Creates user specific secrets
 Use: Once per user
-
-Edited
 """
 
-#import numpy as np
 import json
-from ctypes import *
 from argparse import ArgumentParser
-
-class PublicKey (Structure):
-    _fields_ = [("modulus",c_longlong),("exponent",c_longlong)]
-
-class Userkeys (Structure):
-    _fields_ = [("pubmod",c_longlong),("pubexp",c_longlong),("priv",c_uint8*16)]
 
 
 def main(user_list, outfile):
@@ -28,67 +18,13 @@ def main(user_list, outfile):
     except Exception as e:
         print("Unable to open secrets file: %s" % (e,))
         return 0
-      
+
     try:
-
-        lib = './setsecs2.so'
-        dll = CDLL(lib)
-        dll.sha256hash.restype = c_char_p #Override default return type
-        dll.getKeys.restype = POINTER(Userkeys) #Expect the output to be structure
-
-        users = [] 
-        hashes = []
-        pubmods = []
-        pubexps = [] 
-        privs = []
-
-        for i in range(len(user_list)):
-            #print(user_list[i].split(":")[1])
-            #pins[i] = c_char_p(user_list[i].split(":")[1].encode('utf-8'))
-            users.append(user_list[i].split(":")[0])
-            pin = create_string_buffer(user_list[i].split(":")[1].encode('utf-8'))
-            #users.value = user_list[i].split(":")[0]#.encode('utf-8')
-
-            print("Hashing...")
-            outhash = dll.sha256hash(pin, c_int(20)).decode('utf-8')
-            hashes.append(outhash)
-
-            #At this point we need the pub and priv keys
-            print("Progressing...")
-            #userks = dll.getKeys(pin)
-            #print("Output Pubmod: ", userks.contents.pubmod)
-            #pubmods.append(userks.contents.pubmod)
-            #pubexps.append(userks.contents.pubexp)
-            #privs.append(userks.contents.priv[:])
-            
-        #print("Output Pubmod: ", userks.contents.pubmod)
-        #print("Output Pubexp: ", userks.contents.pubexp)
-        #print("Output Priv: ", userks.contents.priv[0], " ", userks.contents.priv[15])
-        #print("Output Priv: ", userks.contents.priv[:])
-        print("Outputs are as follows: ")
-        print(users)
-        print(hashes)
-        #print(pubmods)
-        #print(pubexps)
-        #print(privs)
-	
-        print("We out HEREEE!!!!!!")
-	
-
-        user_dict = {users[l] : hashes[l] for l in range(0, len(user_list))}
-
-   
-	#Use ctypes to call the security functionality
-
-	#Goals: Take in pin and user lists
-        #Outputs: users, hashed pins, User structs
-
+        user_dict = {user.split(":")[0]: {"pin": user.split(":")[1], "id": num} for num, user in enumerate(user_list)}
     except IndexError:
         raise Exception(
             "Unable to parse user name and pin. Please make sure you entered the user-list as "
             "space seperated pairs of usernames and pins. Example: --user-list user1:12345678 user2:12345689")
-
-    
     info = json.dumps(user_dict)
     secrets.write(info)
     secrets.close()
