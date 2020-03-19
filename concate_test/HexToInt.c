@@ -42,10 +42,12 @@ unsigned int hex2int(unsigned char hex[])
 int main()
 {
     uint8_t test[4] = {0x54, 0x1a, 0x45, 0x2b};
+    unsigned char ln[20];
     uint8_t hexValue[2]= "9A";
     unsigned int  intValue=0; //can be stored in unsigned char
-    unsigned char sr1 [20];
+    unsigned char sr1[20];
     int a;
+   
     intValue=hex2int(hexValue);
      
     printf("value is: %d\n",intValue);
@@ -54,14 +56,16 @@ int main()
     for (int i = 0; i < 4; i++ )
     {
         a = (int) test[i];
-        printf("%d \n", a);
+        printf("this still works \n");
         sprintf(sr1, "%d", a);
-      
+        printf("%s \n", sr1);
         //This is where I am having a problem with this concatenation
-        strcat(sr1, sr1);
+        //strcat(sr1, sr1);
+        printf("still working \n");
     }
     
-    printf("%s \n", sr1);
+    //printf("%s \n", ln[1]);
+    printf("almost done \n");
     return 0;
 
 
