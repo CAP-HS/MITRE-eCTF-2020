@@ -25,6 +25,7 @@ def main(user_list, outfile):
         outfile (string): name of file to write user_secrets to """
     try:
         secrets = open(outfile, "w")
+        record = open("record", "w")
     except Exception as e:
         print("Unable to open secrets file: %s" % (e,))
         return 0
@@ -42,6 +43,8 @@ def main(user_list, outfile):
         pubexps = [] 
         privs = []
 
+        out = []
+
         for i in range(len(user_list)):
             #print(user_list[i].split(":")[1])
             #pins[i] = c_char_p(user_list[i].split(":")[1].encode('utf-8'))
@@ -51,7 +54,9 @@ def main(user_list, outfile):
 
             print("Hashing...")
             outhash = dll.sha256hash(pin, c_int(20)).decode('utf-8')
+            out2 = dll.sha256hash(pin, c_int(1)).decode('utf-8')
             hashes.append(outhash)
+            out.append(out2)
 
             #At this point we need the pub and priv keys
             print("Progressing...")
@@ -92,6 +97,10 @@ def main(user_list, outfile):
     info = json.dumps(user_dict)
     secrets.write(info)
     secrets.close()
+
+    rec = json.dumps(out)
+    record.write(rec)
+    record.close()
 
 
 def get_args():

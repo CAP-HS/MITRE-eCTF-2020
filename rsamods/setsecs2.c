@@ -63,7 +63,15 @@ int getKeys(char *input)
 	//struct User *user;
 	
 	//user = malloc(sizeof(struct User));
-	 
+	
+	memcpy(prv, input, ECC_PRV_KEY_SIZE);
+	unsigned int h;
+	printf("Prv with input: \n");
+	for (h = 0; h <sizeof(prv); ++h) {
+		printf("%02x", prv[h]);
+
+	}
+	printf("\n");
 
 	printf("Generating Keys ...\n");
 	printf("Generation Success? :  %d\n",ecdh_generate_keys(pub, prv));
@@ -85,7 +93,7 @@ int getKeys(char *input)
 	
 	printf("Test loc 1\n");
 
-	/*struct tc_aes_key_sched_struct sk;
+	/*struct tc_aes_key_sched_struct sk;\
 	uint8_t ciphertext[NUM_OF_NIST_KEYS];
 	uint8_t private[16];
 	memcpy(private, &priv, sizeof(priv));
