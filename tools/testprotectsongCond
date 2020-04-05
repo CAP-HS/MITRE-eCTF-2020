@@ -2,11 +2,19 @@
 
 # Based on the previous protect song the recorded user password hashes are pulled into the python environment and user ecdh public keys are generated. These public keys are not stored but should be used in this environment for creating shared secrets. If the public keys are stored, then the shared secrets can be easily calculated since the shared secret function uses both the user generated secret (should be the public key) and the open song master key secret (song public key generated from random private key). So, overall, the input user private key is hashed and used to generate an ecdh public key. The public key is input to the ecdh shared key function along with the public key of the song (generated from ecdh keygen function using something random as the private key). A shared secret for the user is output. The generated shared secret is then used as an AES key to symmetrically encrypt the song private key (random key). In parallel to all this, the song is encrypted with the random key. Outside of this protectsong python script the random song key is unknown until it is decrypted with the individual user shared secrets.
 
+import random
+import string
+
+def randomStringDigits(stringLength=10):
+    """Generate a random string of letters and digits """
+    lettersAndDigits = string.ascii_letters + string.digits
+    return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
 
 
 #Assuming the user private key hashes are available (done in testprotectsong), the next step is to generate a random key for the song. This could be some timestamp passed into a rand function or whatever (up to you).
 
-
+master_private_key = randomStringDigits()
+print(master_private_key)
 
 
 
