@@ -724,16 +724,16 @@ static int gf2point_on_curve(const gf2elem_t x, const gf2elem_t y)
 
 
 /* NOTE: private should contain random data a-priori! */
-int ecdh_generate_keys(uint8_t* public_key, uint8_t* private_key)
+int ecdh_generate_keys(uint8_t *public_key, uint8_t *private_key)
 {
 
     unsigned int k;				//DEBUG
     printf("Private key:	");
-    for (k = 0; k < sizeof(private_key); ++k){
+    for (k = 0; k < ECC_PRV_KEY_SIZE; ++k){
     	printf("%02x", private_key[k]);
 	}
     printf("\n");
-    printf("Size:	%zu\n", sizeof(private_key));
+    //printf("Size:	%zu\n", sizeof(private_key));
 
   /* Get copy of "base" point 'G' */
   gf2point_copy((uint32_t*)public_key, (uint32_t*)(public_key + BITVEC_NBYTES), base_x, base_y);
@@ -759,7 +759,7 @@ int ecdh_generate_keys(uint8_t* public_key, uint8_t* private_key)
 
     unsigned int j;				//DEBUG
     printf("Pub key:	");
-    for (j = 0; j < sizeof(public_key); ++j){
+    for (j = 0; j < ECC_PUB_KEY_SIZE; ++j){
     	printf("%02x", public_key[j]);
 	}
     printf("\n");

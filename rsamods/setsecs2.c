@@ -53,7 +53,7 @@ char* sha256hash(char *input,int n)
 }
 
 //struct User *getKeys(char *input)
-int getKeys(char *input)
+uint8_t* getKeys(char *input)
 {
 	printf("Key sizes: pub %d / prv %d\n", ECC_PUB_KEY_SIZE, ECC_PRV_KEY_SIZE);
 	static uint8_t pub[ECC_PUB_KEY_SIZE];
@@ -73,46 +73,43 @@ int getKeys(char *input)
 	}
 	printf("\n");
 
-	printf("Generating Keys ...\n");
+	printf("Generating Keys (0 is for fail, 1 is for pass)...\n");
 	printf("Generation Success? :  %d\n",ecdh_generate_keys(pub, prv));
-	//Generate ECDH keys instead of RSA ******************************
-	//rsa_gen_keys(pub, priv, PRIME_SOURCE_FILE);
 
-	//Debug
-	  //printf("Private Key:\n Modulus: %lld\n Exponent: %lld\n", (long long)priv->modulus, (long long) priv->exponent);
-	  //printf("Public Key:\n Modulus: %lld\n Exponent: %lld\n", (long long)pub->modulus, (long long) pub->exponent);
-	
-	//Encrypt
-	printf("Test loc 0\n");
+	return pub;
+}
 
+//This function will take in the user private and master private keys, create a shared secret and use the shared secret to encrypt the master private key.
+uint8_t* createSharedSecretKeyANDencrypt(char* input, char* MasterPriv)
+{
+	//Setup user public key
+	static uint8_t pub[ECC_PUB_KEY_SIZE];
+  	static uint8_t prv[ECC_PRV_KEY_SIZE];
+	memcpy(prv, input, ECC_PRV_KEY_SIZE);
+	ecdh_generate_keys(pub, prv);
+
+	//Setup song key
 	uint8_t digest[32];
 	struct tc_sha256_state_struct s;	
 	(void)tc_sha256_init(&s);
-	tc_sha256_update(&s,(const uint8_t *) input, strlen(input));
+	tc_sha256_update(&s, MasterPriv, strlen(MasterPriv));
 	(void)tc_sha256_final(digest, &s);
-	
-	printf("Test loc 1\n");
+	//static uint8_t songpub[ECC_PUB_KEY_SIZE];
+  	static uint8_t songprv[ECC_PRV_KEY_SIZE];
+	memcpy(songprv, digest, ECC_PRV_KEY_SIZE);
+	//ecdh_generate_keys(songpub, songprv);	
 
-	/*struct tc_aes_key_sched_struct sk;\
-	uint8_t ciphertext[NUM_OF_NIST_KEYS];
-	uint8_t private[16];
-	memcpy(private, &priv, sizeof(priv));
-	(void)tc_aes128_set_encrypt_key(&sk, digest);
-	tc_aes_encrypt(ciphertext, private, &sk);
-*/
+	//Now the shared secret can be made using the public keys
+	static uint8_t shared[ECC_PUB_KEY_SIZE];	
+	ecdh_shared_secret(priv,/* Master public*/, shared);
 
-	//Create User
-	printf("Test loc 2\n");
-	//user->pubmod = (long long) pub->modulus;
-	//user->pubexp = (long long) pub->exponent;
+	//Use shared key to encrypt master priv key (songprv)
+  	static uint8_t encsongprv[ECC_PRV_KEY_SIZE];	
+	struct tc_aes_key_sched_struct sk;
+	(void)tc_aes128_set_encrypt_key(&sk, shared);
+	tc_aes_encrypt(encsongprv, songprv, &sk);
 
-	//printf("User Mod test check: %lld\n", user->pubmod);
-	//memcpy(user->priv, ciphertext, sizeof(ciphertext));	
-	printf("Test loc 3\n");
-
-	//printf("DEBUG: %" PRIu8 " %" PRIu8 "\n", user->priv[0], user->priv[15]); //DEBUG
-
-	return 0;
+	return encsongprv; //This could also go straight into a map inside this function
 }
 
 
