@@ -1,7 +1,6 @@
 #include <stdio.h>
 
-
-#include "ecdh.h"
+#include "rsa.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -52,35 +51,21 @@ char* sha256hash(char *input,int n)
 	return input;
 }
 
-//struct User *getKeys(char *input)
-int getKeys(char *input)
+struct User *getKeys(char *input)
 {
-	printf("Key sizes: pub %d / prv %d\n", ECC_PUB_KEY_SIZE, ECC_PRV_KEY_SIZE);
-	static uint8_t pub[ECC_PUB_KEY_SIZE];
-  	static uint8_t prv[ECC_PRV_KEY_SIZE];
-	//struct public_key_class pub[1];
-  	//struct private_key_class priv[1];
-	//struct User *user;
+	struct public_key_class pub[1];
+  	struct private_key_class priv[1];
+	struct User *user;
 	
-	//user = malloc(sizeof(struct User));
-	
-	memcpy(prv, input, ECC_PRV_KEY_SIZE);
-	unsigned int h;
-	printf("Prv with input: \n");
-	for (h = 0; h <sizeof(prv); ++h) {
-		printf("%02x", prv[h]);
-
-	}
-	printf("\n");
+	user = malloc(sizeof(struct User));
+	 
 
 	printf("Generating Keys ...\n");
-	printf("Generation Success? :  %d\n",ecdh_generate_keys(pub, prv));
-	//Generate ECDH keys instead of RSA ******************************
-	//rsa_gen_keys(pub, priv, PRIME_SOURCE_FILE);
+	rsa_gen_keys(pub, priv, PRIME_SOURCE_FILE);
 
 	//Debug
-	  //printf("Private Key:\n Modulus: %lld\n Exponent: %lld\n", (long long)priv->modulus, (long long) priv->exponent);
-	  //printf("Public Key:\n Modulus: %lld\n Exponent: %lld\n", (long long)pub->modulus, (long long) pub->exponent);
+	  printf("Private Key:\n Modulus: %lld\n Exponent: %lld\n", (long long)priv->modulus, (long long) priv->exponent);
+	  printf("Public Key:\n Modulus: %lld\n Exponent: %lld\n", (long long)pub->modulus, (long long) pub->exponent);
 	
 	//Encrypt
 	printf("Test loc 0\n");
@@ -93,26 +78,25 @@ int getKeys(char *input)
 	
 	printf("Test loc 1\n");
 
-	/*struct tc_aes_key_sched_struct sk;\
+	struct tc_aes_key_sched_struct sk;
 	uint8_t ciphertext[NUM_OF_NIST_KEYS];
 	uint8_t private[16];
 	memcpy(private, &priv, sizeof(priv));
 	(void)tc_aes128_set_encrypt_key(&sk, digest);
 	tc_aes_encrypt(ciphertext, private, &sk);
-*/
 
 	//Create User
 	printf("Test loc 2\n");
-	//user->pubmod = (long long) pub->modulus;
-	//user->pubexp = (long long) pub->exponent;
+	user->pubmod = (long long) pub->modulus;
+	user->pubexp = (long long) pub->exponent;
 
-	//printf("User Mod test check: %lld\n", user->pubmod);
-	//memcpy(user->priv, ciphertext, sizeof(ciphertext));	
+	printf("User Mod test check: %lld\n", user->pubmod);
+	memcpy(user->priv, ciphertext, sizeof(ciphertext));	
 	printf("Test loc 3\n");
 
-	//printf("DEBUG: %" PRIu8 " %" PRIu8 "\n", user->priv[0], user->priv[15]); //DEBUG
+	printf("DEBUG: %" PRIu8 " %" PRIu8 "\n", user->priv[0], user->priv[15]); //DEBUG
 
-	return 0;
+	return user;
 }
 
 

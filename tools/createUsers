@@ -2,10 +2,20 @@
 """
 Description: Creates user specific secrets
 Use: Once per user
+
+Edited
 """
 
+#import numpy as np
 import json
+from ctypes import *
 from argparse import ArgumentParser
+
+class PublicKey (Structure):
+    _fields_ = [("modulus",c_longlong),("exponent",c_longlong)]
+
+class Userkeys (Structure):
+    _fields_ = [("pubmod",c_longlong),("pubexp",c_longlong),("priv",c_uint8*16)]
 
 
 def main(user_list, outfile):
@@ -19,8 +29,6 @@ def main(user_list, outfile):
     except Exception as e:
         print("Unable to open secrets file: %s" % (e,))
         return 0
-<<<<<<< HEAD
-=======
       
     try:
 
@@ -79,14 +87,13 @@ def main(user_list, outfile):
 
 	#Goals: Take in pin and user lists
         #Outputs: users, hashed pins, User structs
->>>>>>> origin/dummy
 
-    try:
-        user_dict = {user.split(":")[0]: {"pin": user.split(":")[1], "id": num} for num, user in enumerate(user_list)}
     except IndexError:
         raise Exception(
             "Unable to parse user name and pin. Please make sure you entered the user-list as "
             "space seperated pairs of usernames and pins. Example: --user-list user1:12345678 user2:12345689")
+
+    
     info = json.dumps(user_dict)
     secrets.write(info)
     secrets.close()

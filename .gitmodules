@@ -4,3 +4,6 @@
 [submodule "pl"]
 	path = pl
 	url = https://github.com/mitre-cyber-academy/Cora-Z7-07S-base-linux.git
+[submodule "song_code_drm"]
+	path = song_code_drm
+	url = https://github.com/edaho1/song_code_drm.git
