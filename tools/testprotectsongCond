@@ -4,17 +4,206 @@
 
 import random
 import string
+import json
+from ctypes import *
+from argparse import ArgumentParser
+#import numpy as np
+import struct
+import os
+import wave
+#import numpy as np
 
+
+class ProtectedSong(object):
+    """Example song object for protected song"""
+
+    def __init__(self, path_to_song, metadata):
+        """initialize values
+        Args:
+            path_to_song (string): file name where the song to be provisioned is stored
+            metadata (bytearray): bytes containing metadata information
+        """
+        self.song = path_to_song
+        self.full_song, self.original_song = self.read_song(path_to_song)
+        self.metadata = metadata
+
+    def save_secured_song_to_wave(self, file_location):
+        """Saves secured song to wave file assuming all the same characteristics as original song
+        Args:
+            file_location (string): location to store the file including name"""
+        protected_wav = wave.open(os.path.abspath(file_location), 'wb')
+        protected_wav.setnchannels(self.original_song.getnchannels())
+        protected_wav.setsampwidth(self.original_song.getsampwidth())
+        protected_wav.setframerate(self.original_song.getframerate())
+        protected_wav.writeframes(self.metadata)
+
+        for val in self.full_song:
+            protected_wav_val = struct.pack('<h', val)
+
+            #This is where the song data should be encrypted  
+
+            protected_wav.writeframesraw(protected_wav_val)
+
+        protected_wav.close()
+
+    def read_song(self, path, metadata_frames=0):
+        """Reads a wave file
+        Args:
+            path (string): path to song
+            metadata_frames (int): if not 0 disregard this number of frames as metadata
+        Returns:
+            vals (array): integer array of decoded values
+            song (Wave Object): wave object associated with entered song
+        """
+        song = wave.open(os.path.abspath(path), 'r')
+        if metadata_frames:
+            song.readframes(metadata_frames)  # skip the metadata frames when assigning vals
+        vals = np.frombuffer(song.readframes(song.getnframes()), dtype=np.int16)
+        song.close()
+        return vals, song
+
+
+def create_metadata(regions, user, user_secret_location, region_info):
+    """Returns a byte string formatted as follows:
+    METADATA_LENGTH(1B)/ownerID(1B)/REGION_LEN(1B)/USER_LEN(1B)/REGIONID1(1B)/REGIONID2 (1B)/.../opt. parity
+    Args:
+        regions (list): list of regions to provision song for
+        user (string): user name for owner of the song
+        user_secret_location (string): path to user secrets file
+        region_info (dict): mapping of regions provided by region_information.json
+    Returns:
+        metadata (bytes): bytes of encoded metadata
+    Example:
+        >>create_metadata(['USA', 'Canada'], 'user1', 'user_secrets.json', {'USA': 1, 'Canada':2})
+        'x06/x00/x01/x00/x01/x02'
+    """
+    user_secrets = json.load(open(os.path.abspath(user_secret_location)))
+
+    # note: metadata must be an even length since each sample is 2B long
+    # and ARM processors require memory accesses to be aligned to the type size
+    metadata = struct.pack(
+        '=3B{regions_length}s{regions_len_2}s'.format(regions_length=len(regions), regions_len_2=len(regions) % 2),
+        int(user_secrets[user]['id']), len(regions), 0,
+        bytes([region_info[str(r)] for r in regions]),
+        b'\x00' if len(regions) % 2 else b'')
+
+    return bytes([len(metadata) + 1]) + metadata
+
+
+#Creates random password
 def randomStringDigits(stringLength=10):
     """Generate a random string of letters and digits """
     lettersAndDigits = string.ascii_letters + string.digits
     return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
 
 
+def main():
+    parser = ArgumentParser(description='main interface to protect songs')
+    parser.add_argument('--region-list', nargs='+', help='List of regions song can be played in', required=True)
+    parser.add_argument('--region-secrets-path', help='File location for the region secrets file',
+                        required=True)
+    parser.add_argument('--outfile', help='path to save the protected song', required=True)
+    parser.add_argument('--infile', help='path to unprotected song', required=True)
+    parser.add_argument('--owner', help='owner of song', required=True)
+    parser.add_argument('--user-secrets-path', help='File location for the user secrets file', required=True)
+    args = parser.parse_args()
+
+    regions = json.load(open(os.path.abspath(args.region_secrets_path)))
+    try:
+        metadata = create_metadata(args.region_list, args.owner, args.user_secrets_path, regions)
+    except ValueError:
+        raise ValueError('Ensure all user IDs are integers and all regions are in the provided region_information.json')
+    #protected_song = ProtectedSong(args.infile, metadata)
+
+
+    #RETRIEVE THE RECORDED PINS----------------------------
+    try:
+        lib = './setsecs2.so'
+        dll = CDLL(lib)
+        dll.sha256hash.restype = c_char_p #Override default return type
+    #dll.getKeys.restype = POINTER(Userkeys) #Expect the output to be structure    
+
+        f = open('record', 'r')
+        ps = f.readlines()
+    #Pins need parsing
+        ps[0] = ps[0].replace('[', '')
+        ps[0] = ps[0].replace(']', '')
+        ps[0] = ps[0].replace('"', '')
+        pins = ps[0].split(', ')
+
+        g = open('usernames', 'r')
+        ps = g.readlines()
+    #Pins need parsing
+        ps[0] = ps[0].replace('[', '')
+        ps[0] = ps[0].replace(']', '')
+        ps[0] = ps[0].replace('"', '')
+        users = ps[0].split(', ')
+    except:
+        raise Exception(
+            "An issue is present with reading record!")
+    f.close()
+    g.close()
+    #----------------------------------------------------------
+    #CREATE SONG KEY
+    song_key = randomStringDigits()
+
+    print(pins)
+    print(users)
+    #----------------------------------------------------------
+    #CREATE MASTER PUBLIC KEY
+    # The song master key should be passed into another ctypes function that handles ecdh public key generation. The master public key is output from ctypes back to the python environment. 
+    
+
+    #-----------------------------------------------------------
+    #Now a loop through each user is started. A ctypes function for generating ecdh shared secrets is used in the loop. Each loop iteration, the user hashed pin from the recorded file is input to a ctypes ecdh keygen function and outputs a user public key. The user public key and the master public key are inputed to the ctypes ecdh shared secret function and a shared secret is outputed. The user shared secret is passed into the ctypes encryption function along with the master private key (random key). The output is the encrypted master private key. Each encrypted song key is generated by the end of this loop (Key mapping details TBD). 
+																																																																																																																																																																																																				
+
+
+
+
+    #-----------------------------------------------------------
+
+    #protected_song.save_secured_song_to_wave(args.outfile)
+
+
+if __name__ == '__main__':
+    main()
+
+
+#RETRIEVE THE RECORDED PINS----------------------------
+#try:
+#    lib = './setsecs2.so'
+#    dll = CDLL(lib)
+#    dll.sha256hash.restype = c_char_p #Override default return type
+    #dll.getKeys.restype = POINTER(Userkeys) #Expect the output to be structure    
+
+#    f = open('record', 'r')
+#    ps = f.readlines()
+
+#Pins need parsing
+#    ps[0] = ps[0].replace('[', '')
+#    ps[0] = ps[0].replace(']', '')
+#    ps[0] = ps[0].replace('"', '')
+#    pins = ps[0].split(', ')
+
+#Now the pins have been imported and parsed in the pins variable
+    #print(pins[0:len(pins)])
+
+#Needs for loop
+#The key generation is successful. The use of the keys is still undetermined (Whether they stay in c or come out here to python.
+    #userks = dll.getKeys(create_string_buffer(pins[0].encode('utf-8')))
+
+    #print(userks)
+
+#except:
+#    raise Exception(
+#        "An issue is present with reading record")
+#f.close()
+#----------------------------------------------------------
+
 #Assuming the user private key hashes are available (done in testprotectsong), the next step is to generate a random key for the song. This could be some timestamp passed into a rand function or whatever (up to you).
 
-master_private_key = randomStringDigits()
-print(master_private_key)
+
 
 
 
