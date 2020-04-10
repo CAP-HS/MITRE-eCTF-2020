@@ -55,7 +55,7 @@ class ProtectedSong(object):
         vals = np.frombuffer(song.readframes(song.getnframes()), dtype=np.int16)
         song.close()
         return vals, song
-
+#def create_metadata(regions, user_name, user_str, )#where am I reading this from?
 
 def create_metadata(regions, user, user_secret_location, region_info):
     """Returns a byte string formatted as follows:
@@ -80,7 +80,7 @@ def create_metadata(regions, user, user_secret_location, region_info):
         int(user_secrets[user]['id']), len(regions), 0,
         bytes([region_info[str(r)] for r in regions]),
         b'\x00' if len(regions) % 2 else b'')
-
+         
     return bytes([len(metadata) + 1]) + metadata
 
 
@@ -100,7 +100,10 @@ def main():
         metadata = create_metadata(args.region_list, args.owner, args.user_secrets_path, regions)
     except ValueError:
         raise ValueError('Ensure all user IDs are integers and all regions are in the provided region_information.json')
-    protected_song = ProtectedSong(args.infile, metadata)
+    
+    #Encryption here
+    protected_song = ProtectedSong(args.infile, metadata) #Take in Encrypted song, metadata
+    
     protected_song.save_secured_song_to_wave(args.outfile)
 
 
