@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+
+# ./peter_crypto --region-list "United States" --region-secrets-path global_provisioning/region.secrets --outfile global_provisioning/audio/demo.drm --infile ../sample-audio/Sound-Bite_One-Small-Step.wav --owner "drew" --user-secrets-path global_provisioning/user.secrets
 """
 Description: Protects song by adding metadata or any other security measures
 Use: Once per song

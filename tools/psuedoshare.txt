@@ -1,0 +1,7 @@
+
+song sharing
+
+Alice: APub APriv
+Bob: BPub BPriv
+
+shared secret(APriv, BPub) == secret(BPriv, A Pub) == K(This K is used to encrypt song key)
