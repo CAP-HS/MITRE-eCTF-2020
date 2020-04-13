@@ -1,0 +1,11 @@
+
+#!/bin/bash
+
+gcc -shared -Wl,-soname,setsecs2 -o setsecs2.so -fPIC setsecs2.c sha256.h sha256.c utils.h utils.c ecdh.h ecdh.c constantsA.h aes.h aes_decrypt.h aes_encrypt.h
+
+cp setsecs2.so ~/MITRE-eCTF-2020/tools/
+
+cd ~/MITRE-eCTF-2020/tools
+
+./createUsers --user-list "drew:1234567890" "ben:00000000" "misha:0987654321" --outfile global_provisioning/user.secrets
+
