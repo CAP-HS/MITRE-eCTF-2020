@@ -5,6 +5,9 @@
 
 
 #include "miPod.h"
+#include "include/map.h"
+#include "include/aes.h"
+#include "include/song.h"
 
 #include <stdio.h>
 #include <sys/mman.h>
@@ -52,8 +55,8 @@ void print_help() {
     mp_printf("  play <song.drm>: play the song\r\n");
     mp_printf("  digital_out <song.drm>: play the song to digital out\r\n");
     mp_printf("  exit: exit miPod\r\n");
-    mp_printf(" edmund: just testing\r\n");
     mp_printf("  help: display this message\r\n");
+    //mp_printf("  edmund: just testing\r\n");
 }
 
 
@@ -67,7 +70,7 @@ void print_playback_help() {
     mp_printf("  ff: fast forwards 5 seconds(unsupported)\r\n");
     mp_printf("  rw: rewind 5 seconds (unsupported)\r\n");
     mp_printf("  help: display this message\r\n");
-    mp_printf(" Edmund: just testing again\r\n");
+    //mp_printf("  edmund: just testing again\r\n");
 }
 
 
@@ -110,14 +113,14 @@ void login(char *username, char *pin) {
     // drive DRM
     strcpy((void*)c->username, username);
     strcpy((void*)c->pin, pin);
-    send_command(LOGIN);
+    send_command(LOGIN); // these commands could pose an issue
 }
 
 
 // logs out for a user
 void logout() {
     // drive DRM
-    send_command(LOGOUT);
+    send_command(LOGOUT); // these commands could pose an issue
 }
 
 
