@@ -1,5 +1,4 @@
-
-Create song structure that would contain useful information for provisioning
+//Create song structure that would contain useful information for provisioning
 
 Struct 
 {
@@ -8,3 +7,17 @@ Struct
 
 Master Public key;
 } song;
+
+
+//---------------------------------------
+/*
+Reasons for parameters:
+
+
+
+
+
+
+
+
+*/

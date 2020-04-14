@@ -35,6 +35,9 @@ def main(user_list, outfile):
         secrets = open(outfile, "w")
         record = open("record", "w")
         usernames = open("usernames", "w")
+
+        usermap = open("user_map.txt", "w")
+
     except Exception as e:
         print("Unable to open secrets file: %s" % (e,))
         return 0
@@ -44,6 +47,7 @@ def main(user_list, outfile):
         lib = './setsecs2.so'
         dll = CDLL(lib)
         dll.sha256hash.restype = c_char_p #Override default return type
+        dll.getkeystring.restype = c_char_p
         dll.getKeys.restype = POINTER(Userkeys) #Expect the output to be structure
 
         users = [] 
@@ -59,6 +63,7 @@ def main(user_list, outfile):
         for i in range(len(user_list)):
             #print(user_list[i].split(":")[1])
             #pins[i] = c_char_p(user_list[i].split(":")[1].encode('utf-8'))
+            User = user_list[i].split(":")[0]
             users.append(user_list[i].split(":")[0])
             pin = create_string_buffer(user_list[i].split(":")[1].encode('utf-8'))
             #users.value = user_list[i].split(":")[0]#.encode('utf-8')
@@ -69,13 +74,19 @@ def main(user_list, outfile):
             hashes.append(outhash)
             out.append(out2)
 
-            #At this point we need the pub and priv keys
-            print("Progressing...")
-            #userks = dll.getKeys(pin)
-            #print("Output Pubmod: ", userks.contents.pubmod)
-            #pubmods.append(userks.contents.pubmod)
-            #pubexps.append(userks.contents.pubexp)
-            #privs.append(userks.contents.priv[:])
+            #Make string of ecdh public key for users
+            print("ECDH key")
+            temp = create_string_buffer(out2.encode('utf-8'))
+            print(out2)
+            #print(temp)
+            pubkey = dll.getkeystring(temp).decode('utf-8')
+            print("Test pub")
+            #print(pubkey)
+
+            #dll.parsepub(create_string_buffer(pubkey.encode('utf-8')));
+            dictline = User + " "+ pubkey + "\n"
+            print(dictline)
+            usermap.write(dictline)
             
         
         #print("Output Pubmod: ", userks.contents.pubmod)
@@ -100,7 +111,8 @@ def main(user_list, outfile):
         masteruser = "master"
 
 
-        user_dict = {users[l] : hashes[l] for l in range(0, len(user_list))}
+
+        user_dict = {users[l] : {"pin": hashes[l], "id": l} for l in range(0, len(user_list))}
 
         #Append master user
         out.append(masterhash)
@@ -128,6 +140,11 @@ def main(user_list, outfile):
     rec = json.dumps(out)
     record.write(rec)
     record.close()
+
+    usermap.close()
+
+    #Testing
+    dll.testimportUsermap()
 
 
 def get_args():

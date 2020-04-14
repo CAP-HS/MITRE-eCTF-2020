@@ -80,7 +80,7 @@ uint8_t* getKeys(char *input)
 }
 
 //This function will take in the user private and master private keys, create a shared secret and use the shared secret to encrypt the master private key.
-uint8_t* createSharedSecretKeyANDencrypt(char* input, char* MasterPriv)
+/*uint8_t* createSharedSecretKeyANDencrypt(char* input, char* MasterPriv)
 {
 	//Setup user public key
 	static uint8_t pub[ECC_PUB_KEY_SIZE];
@@ -101,17 +101,164 @@ uint8_t* createSharedSecretKeyANDencrypt(char* input, char* MasterPriv)
 
 	//Now the shared secret can be made using the public keys
 	static uint8_t shared[ECC_PUB_KEY_SIZE];	
-	ecdh_shared_secret(priv,/* Master public*/, shared);
+	ecdh_shared_secret(priv, Master public_____________, shared);
 
 	//Use shared key to encrypt master priv key (songprv)
-  	static uint8_t encsongprv[ECC_PRV_KEY_SIZE];	
+  	/*static uint8_t encsongprv[ECC_PRV_KEY_SIZE];	
 	struct tc_aes_key_sched_struct sk;
 	(void)tc_aes128_set_encrypt_key(&sk, shared);
 	tc_aes_encrypt(encsongprv, songprv, &sk);
 
 	return encsongprv; //This could also go straight into a map inside this function
+}*/
+
+//This function is for createUser
+char* getkeystring(char *input)
+{
+//This should take in a hash of private key for user and output a string for the public key
+	//NOTE: Pin is a hash
+
+	//printf("After: %s\n", input);
+	//sha256hash(input,1);
+	//Generate ecdh pub key	
+	static uint8_t pub[ECC_PUB_KEY_SIZE];
+  	static uint8_t prv[ECC_PRV_KEY_SIZE];
+	memcpy(prv, input, ECC_PRV_KEY_SIZE);
+	ecdh_generate_keys(pub, prv);
+
+	//printf("Pub string: %s\n", pub);
+
+	//Create output string buffer
+	char out[ECC_PUB_KEY_SIZE];
+	char out2[ECC_PUB_KEY_SIZE*2];
+	memset(out2,0,sizeof(out2));
+	unsigned int j;
+	for(j = 0; j < sizeof(pub); ++j){
+		printf("%d ", pub[j]);
+		//printf("%c	", testint[j]);
+		//printf("%d\n", testint[j]);
+		sprintf(out, "%02x",pub[j]); //Debug
+		strcat(out2, out);
+	}
+	//printf("\n");
+	input = out2;
+	//printf("OUT: %s\n", input);
+	//Return string form of public key
+
+	//printf("%c\n", out2[0]);	
+	parsepub(input);
+
+	return input;
 }
 
+////PARSE FUNCTIONS-----------------------
+
+int charconvert(char in){
+
+	//printf("%c", in);
+	if (in == '0'){
+		return 0;
+	}
+	else if (in == '1'){
+		return 1;
+	}
+	else if (in == '2'){
+		return 2;
+	}
+	else if (in == '3'){
+		return 3;
+	}
+	else if (in == '4'){
+		return 4;
+	}
+	else if (in == '5'){
+		return 5;
+	}
+	else if (in == '6'){
+		return 6;
+	}
+	else if (in == '7'){
+		return 7;
+	}
+	else if (in == '8'){
+		return 8;
+	}
+	else if (in == '9'){
+		return 9;
+	}
+	else if (in == 'a'){
+		return 10;
+	}
+	else if (in == 'b'){
+		return 11;
+	}
+	else if (in == 'c'){
+		return 12;
+	}
+	else if (in == 'd'){
+		return 13;
+	}
+	else if (in == 'e'){
+		return 14;
+	}
+	else if (in == 'f'){
+		return 15;
+	}
+	else {
+		return 0;
+	}
+
+}
+
+int hex_to_dec(char *in1, char *in2){
+
+	return charconvert(in1)*16 + charconvert(in2);
+
+}
+
+int parsepub(char *input)
+{
+	static uint8_t outpub[ECC_PUB_KEY_SIZE];
+	unsigned int k;
+	printf("Parse Pub: \n");
+	//char temp;
+	for (k=0;k<ECC_PUB_KEY_SIZE*2;k+=2){
+
+		int temp = hex_to_dec(input[k], input[k+1]);
+		outpub[k/2] = temp;
+	}
+	printf("\n");
+
+
+	for (k=0;k<ECC_PUB_KEY_SIZE;++k){
+		printf("%d ", outpub[k]);
+	}
+	printf("\nParse Complete \n");
+
+	return 0;
+
+}
+
+
+int testimportUsermap()
+{
+    	FILE *fp;
+	int siz = ECC_PUB_KEY_SIZE*2+16+1;
+    	char str[siz];
+    	char* filename = "user_map.txt";
+
+	fp = fopen(filename, "r");
+	while (fgets(str, siz, fp) != NULL){
+        	printf("%s", str);
+	}
+
+	fclose(fp);
+	return 0;
+}
+
+
+
+////------------------------------------------------------------------
 
 /*struct User createUserObject(char* name[10], char* input, struct private_key_class priv, struct public_key_class pub, struct User user)
 {

@@ -1,0 +1,47 @@
+
+struct
+{
+song_id
+user_id
+}
+song map
+song_id -->
+user map|||||
+user_id -->private
+
+Once user is logged on:
+user enters song_id
+under user song_list folder(map)
+iterate through a map **how long does this take!
+song_id found
+
+
+
+SONG STRUCT:
+typedef struct __attribute__((__packed__))
+{
+	
+	char packing1[4];
+    	u32 file_size;
+    	char packing2[32];
+    	u32 wav_size;
+    	drm_md md;	
+	encrypted song
+	song_id
+
+} song;
+
+//The check for the song would be as user logs and user song tables
+
+Givens upon access song:
+1. Username
+2. Song name
+
+Necessary process for handling song:
+Use username to access table containing public keys.
+	One table that includes all user public keys including master public.
+Use song name and username
+	One table per song that includes usernames and encrypted song key.
+Application:
+Create a file that contains a table of usernames and public keys.
+Create a file for each song that contains usernames and encrypted song keys.

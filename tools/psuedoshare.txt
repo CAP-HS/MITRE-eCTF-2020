@@ -4,4 +4,87 @@ song sharing
 Alice: APub APriv
 Bob: BPub BPriv
 
+Basis:
 shared secret(APriv, BPub) == secret(BPriv, A Pub) == K(This K is used to encrypt song key)
+
+
+Parameter Location:
+
+1. All User public keys
+2. Master Public key
+3. Encrypted song key
+
+
+////SHARE SONG PROCESS
+
+//Logged in Bob wants to access owned song
+gen_secret(Bob_Priv, Master_Public) --> shared key
+decrypt song key with shared key --> song key
+
+//Share song key with friend
+gen_secret(Bob_Priv, Alice_Public) --> user shared key 
+encrypt song key with user shared key
+
+//Assume the user encrypted song key is retrieveble
+gen_secret(Alice_Priv, Bob_Public) --> same user shared key
+decrypt song key with user shared key
+
+//Encrypt song key for ALice user
+gen_secret(Alice_Priv, Master_Public) --> shared key
+encrypt song key with shared key
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
