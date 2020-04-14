@@ -10,11 +10,11 @@
 typedef struct {
 	char current_user[USERNAME_SZ];
 	//const u8 user_ids[64]; // alternatively, we can ask for the users id
-	char *song_name;
+	char *song_name; // a typedef struct doesn't allow pointers
 	char song_region[REGION_NAME_SZ]; 
 	char owner_id; // who owns this song
 	// the song shared list may need to go here
-	char *song_shared;
+	char *song_shared; // a typedef struct doesn't allow pointers
 	//char song_shared[NUM_USERS]; // the song can be shared with as many users as the device is provisioned for
 } song_structure;
 
