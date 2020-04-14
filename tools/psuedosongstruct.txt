@@ -1,0 +1,10 @@
+
+Create song structure that would contain useful information for provisioning
+
+Struct 
+{
+
+
+
+Master Public key;
+} song;

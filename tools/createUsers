@@ -2,11 +2,29 @@
 """
 Description: Creates user specific secrets
 Use: Once per user
+
+Edited
 """
 
+#import numpy as np
 import json
+from ctypes import *
 from argparse import ArgumentParser
+import string 
+import random
 
+
+class PublicKey (Structure):
+    _fields_ = [("modulus",c_longlong),("exponent",c_longlong)]
+
+class Userkeys (Structure):
+    _fields_ = [("pubmod",c_longlong),("pubexp",c_longlong),("priv",c_uint8*16)]
+
+#Creates random password
+def randomStringDigits(stringLength=10):
+    """Generate a random string of letters and digits """
+    lettersAndDigits = string.ascii_letters + string.digits
+    return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
 
 def main(user_list, outfile):
     """writes user secrets to json file
@@ -16,11 +34,10 @@ def main(user_list, outfile):
     try:
         secrets = open(outfile, "w")
         record = open("record", "w")
+        usernames = open("usernames", "w")
     except Exception as e:
         print("Unable to open secrets file: %s" % (e,))
         return 0
-<<<<<<< HEAD
-=======
       
     try:
 
@@ -36,6 +53,8 @@ def main(user_list, outfile):
         privs = []
 
         out = []
+
+
 
         for i in range(len(user_list)):
             #print(user_list[i].split(":")[1])
@@ -58,6 +77,7 @@ def main(user_list, outfile):
             #pubexps.append(userks.contents.pubexp)
             #privs.append(userks.contents.priv[:])
             
+        
         #print("Output Pubmod: ", userks.contents.pubmod)
         #print("Output Pubexp: ", userks.contents.pubexp)
         #print("Output Priv: ", userks.contents.priv[0], " ", userks.contents.priv[15])
@@ -71,25 +91,39 @@ def main(user_list, outfile):
 	
         print("We out HEREEE!!!!!!")
 	
+        #Create master user and append to front of user array
+        #Generate random pin for master
+        #Hash pin and append to hashes array
+        key = randomStringDigits()
+        master_private_key = create_string_buffer(key.encode('utf-8'))
+        masterhash = dll.sha256hash(master_private_key, c_int(1)).decode('utf-8')
+        masteruser = "master"
+
 
         user_dict = {users[l] : hashes[l] for l in range(0, len(user_list))}
 
-   
+        #Append master user
+        out.append(masterhash)
+        users.append(masteruser)
+
 	#Use ctypes to call the security functionality
 
 	#Goals: Take in pin and user lists
         #Outputs: users, hashed pins, User structs
->>>>>>> origin/dummy
 
-    try:
-        user_dict = {user.split(":")[0]: {"pin": user.split(":")[1], "id": num} for num, user in enumerate(user_list)}
     except IndexError:
         raise Exception(
             "Unable to parse user name and pin. Please make sure you entered the user-list as "
             "space seperated pairs of usernames and pins. Example: --user-list user1:12345678 user2:12345689")
+
+    
     info = json.dumps(user_dict)
     secrets.write(info)
     secrets.close()
+
+    names = json.dumps(users)
+    usernames.write(names)
+    usernames.close()
 
     rec = json.dumps(out)
     record.write(rec)
