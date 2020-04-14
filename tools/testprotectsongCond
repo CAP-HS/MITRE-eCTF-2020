@@ -149,6 +149,8 @@ def main():
 
     print(pins)
     print(users)
+
+    dll.testimportUsermap()
     #----------------------------------------------------------
     #CREATE MASTER PUBLIC KEY
     # The song master key should be passed into another ctypes function that handles ecdh public key generation. The master public key is output from ctypes back to the python environment. 
