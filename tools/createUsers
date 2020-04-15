@@ -14,11 +14,6 @@ import string
 import random
 
 
-class PublicKey (Structure):
-    _fields_ = [("modulus",c_longlong),("exponent",c_longlong)]
-
-class Userkeys (Structure):
-    _fields_ = [("pubmod",c_longlong),("pubexp",c_longlong),("priv",c_uint8*16)]
 
 #Creates random password
 def randomStringDigits(stringLength=10):
@@ -48,7 +43,6 @@ def main(user_list, outfile):
         dll = CDLL(lib)
         dll.sha256hash.restype = c_char_p #Override default return type
         dll.getkeystring.restype = c_char_p
-        dll.getKeys.restype = POINTER(Userkeys) #Expect the output to be structure
 
         users = [] 
         hashes = []
@@ -109,6 +103,11 @@ def main(user_list, outfile):
         master_private_key = create_string_buffer(key.encode('utf-8'))
         masterhash = dll.sha256hash(master_private_key, c_int(1)).decode('utf-8')
         masteruser = "master"
+        temp = create_string_buffer(masterhash.encode('utf-8'))
+        pubkey = dll.getkeystring(temp).decode('utf-8')
+        User = masteruser
+        dictline = User + " "+ pubkey + "\n"
+        usermap.write(dictline)
 
 
 
@@ -143,8 +142,7 @@ def main(user_list, outfile):
 
     usermap.close()
 
-    #Testing
-    dll.testimportUsermap()
+
 
 
 def get_args():
