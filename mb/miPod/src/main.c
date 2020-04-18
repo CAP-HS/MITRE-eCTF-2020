@@ -241,7 +241,14 @@ void share_song(char *song_name, char *username) {
 // plays a song and enters the playback command loop
 int play_song(char *song_name) {
     char usr_cmd[USR_CMD_SZ + 1], *cmd = NULL, *arg1 = NULL, *arg2 = NULL;
-
+    /*
+     * song need to be decoded here the moment the user credential checks out
+     * we should check if user have rights to the song by performing a decrypt
+     * using the user credentials. If credential fail user doesn't have access
+     * in this case, just play the demo and print a message to the user allowing them know
+     * the user have no right to the song
+     */
+    //decrypt_song(uint8_t* key, (void *)&c->song, uint8_t* enc_song);
     // load song into shared buffer
     if (!load_file(song_name, (void*)&c->song)) {
         mp_printf("Failed to load song!\r\n");

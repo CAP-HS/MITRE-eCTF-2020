@@ -41,6 +41,7 @@ typedef struct {
 
 // decoding struct should be defined at this point
 typedef struct{
+	// structure into the map goes here
 
 }map;
 typedef struct {
