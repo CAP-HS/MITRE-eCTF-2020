@@ -1,5 +1,5 @@
 #include <stdio.h>
-
+#include <math.h>
 
 #include "ecdh.h"
 #include <string.h>
@@ -190,6 +190,113 @@ char* retrievePub(char *user)
 	return retrieved;
 }
 
+int parsesongK(char *input, uint8_t *encsongKey)
+{
+	//static uint8_t outpub[ECC_PUB_KEY_SIZE];
+	unsigned int k;
+	printf("Parse Pub: \n");
+	//char temp;
+	for (k=0;k<16*2;k+=2){
+
+		int temp = hex_to_dec(input[k], input[k+1]);
+		encsongKey[k/2] = temp;
+	}
+	printf("\n");
+
+
+	for (k=0;k<16;++k){
+		printf("%d ", encsongKey[k]);
+	}
+	printf("\nParse Complete \n");
+
+	return 0;
+
+}
+
+int importSongmap(char songusers[64][16], char songencKeys[64][32], char* filename)
+{
+    	FILE *fp;
+	int siz = 50;
+    	char str[siz];
+    	//char* filename = "user_map.txt";
+
+	char * tokenPtr;
+
+	//char users[64][16];
+	//char pubs[64][100];
+
+
+	fp = fopen(filename, "r");
+	int ind = 0;
+	printf("\n");
+	while (fgets(str, siz, fp) != NULL){
+        	//printf("%s", str);
+		tokenPtr = strtok (str, " ");
+		char * tokens [50]; //Need a dynamic assignation in real time or exact value as required
+		int count = 0;
+
+		while(tokenPtr != NULL)
+		{
+			tokens[count] = tokenPtr; //tokens holds the strings you require
+			count = count + 1;
+			tokenPtr = strtok(NULL, " ");
+		}
+		//sprintf(temp,"%s", tokens[0]);
+		//sprintf(temp2,"%s", tokens[1]);
+
+		//printf("%s	%d\n", temp,ind);
+		//printf("%d\n", ind);
+		//temp[ind] = tokens[0];
+		strcpy(songusers[ind],tokens[0]);
+		strcpy(songencKeys[ind],tokens[1]);
+		//printf("%s	%s\n",songusers[0], songusers[ind]);
+
+		//memset(tokens, 0, 50);
+		ind = ind + 1;
+	}
+
+
+	fclose(fp);
+	return 0;
+}
+
+
+char* retrieveEncKey(char *user, char* filename)
+{
+	
+	char songusers[64][16];
+	char songencKeys[64][32];
+	static char retrievedKey[100];
+
+	importSongmap(songusers, songencKeys, filename); //Thank GOD this works
+
+	int found = 1;
+	unsigned int p;
+	int index = 0;
+	for (p=0;p<64;++p){
+		if (strcmp(user,songusers[p]) == 0){
+			printf("Found index: %d\n	", p);
+			index = p;
+			found = 0;
+		}
+		//printf("%s	", users[p]);
+		//printf("%s\n", user);
+	}
+	if (found == 0){
+		strcpy(retrievedKey,songencKeys[index]);
+		printf("%s\n", retrievedKey);
+	}
+	else{
+		return NULL;
+
+	}
+
+	//printf("Retrieved User:	%s\n", users[1]);
+	//printf("Retrieved Pub key:	%s\n", pubs[1]);
+
+	return retrievedKey;
+}
+
 
 ////------------------------------------------------------------------
 //HASHING
@@ -370,7 +477,85 @@ char* encsongkey(char *userpriv,char *masterpub,char *songkey)
 	return out2;
 }
 
+int enc_song(uint8_t * fullsong, char* key, int songlen, uint8_t encode[songlen])
+{//Edmund
+	//static int lengtmp = songlen;
+	printf("songlen: %d\n",songlen);
+	//printf("Length: %d", ceil(songlen/16)*16);
+	uint8_t padsong[songlen];//ceil(songlen/16)*16];
+	memset(padsong,0,sizeof(padsong));
+	memcpy(padsong,fullsong,sizeof(padsong));
 
+	//int16_t tempenc[songlen];
+
+	
+	uint8_t tmp[16];
+	uint8_t tmp2[16];
+	size_t read = 0;
+	size_t write; 
+	int k=0,i = 0;
+	//uint8_t * p = encode;
+	uint8_t *padptr = padsong;
+
+	static uint8_t songK[16]; //Determined song key size
+	memcpy(songK, key, sizeof(songK));
+	struct tc_aes_key_sched_struct sk;
+	(void)tc_aes128_set_encrypt_key(&sk, songK);
+
+	
+	for(k = 0; k<sizeof(padsong);++k){
+		if (k < 16){
+			printf("%d ", padsong[k]);
+		}
+	};
+	printf("\n");
+	printf("Debug 1\n");
+	//int16_t *track = encode;
+	int offset = 0;
+	for(int j = 0; j < songlen/16;++j)
+	{
+		if( j + 1 == songlen/16){	//If this is the last loop
+			for (k = 0; k < 16; k++){
+				tmp[k] = padptr;
+				padptr = padptr + 1;
+			}
+			tc_aes_encrypt(encode, tmp, &sk);
+			//memcpy(track, tmp2, 16);
+			//printf("Last\n");
+		}else{	//This is not the last loop
+			for (k = 0; k < 16; k++){
+				tmp[k] = padptr;
+				//if( j < 16){
+				//	printf("%02x ",tmp[k]);
+				//}
+				padptr = padptr + 1;
+			}
+			tc_aes_encrypt(encode+offset, tmp, &sk);
+			//memcpy(track, tmp2, 16);
+			//printf("%d	", encode[j]);
+			//printf("Ite: %d\n", j);
+			offset+=16;
+  
+		}
+		//memset(tmp,0,sizeof(tmp));
+		//memset(tmp2,0,sizeof(tmp2));		
+		
+	}
+	//encode-=songlen;
+	printf("\n");
+	for (int j = 0; j < songlen; ++j){
+		if (j<16){
+			printf("%d ", encode[j]);
+		}
+	}
+
+	//printf("%d\n", encode[0]);
+	//printf("%d\n", encode[1]);
+	printf("Done\n");
+	//free(track);
+	//free(p);
+	return 0;
+}
 
 
 

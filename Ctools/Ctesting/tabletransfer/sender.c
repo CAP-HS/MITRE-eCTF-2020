@@ -68,6 +68,20 @@ int main(){
 
 	}
 
+	////START LOOP
+
+		
+
+		////This process may be slow
+		//Make ecdh public keys
+
+		//Turn ecdh public keys into strings
+
+		//Concat username and string with space in between
+
+		//Write new string to file
+
+
 	return 0;
 
 }

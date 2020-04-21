@@ -11,7 +11,8 @@ from argparse import ArgumentParser
 import struct
 import os
 import wave
-#import numpy as np
+import numpy as np
+import math
 
 
 class ProtectedSong(object):
@@ -25,6 +26,10 @@ class ProtectedSong(object):
         """
         self.song = path_to_song
         self.full_song, self.original_song = self.read_song(path_to_song)
+        #print("Full song")
+        #print(self.original_song)
+        self.songlen = len(self.full_song)
+        self.padlen = math.ceil(self.songlen/16)*16
         self.metadata = metadata
 
     def save_secured_song_to_wave(self, file_location):
@@ -37,10 +42,12 @@ class ProtectedSong(object):
         protected_wav.setframerate(self.original_song.getframerate())
         protected_wav.writeframes(self.metadata)
 
-        for val in self.full_song:
-            protected_wav_val = struct.pack('<h', val)
+        #Call enc_song function
+        #Pass self.full_song into enc_song function and ouptut int array 	
+        
 
-            #This is where the song data should be encrypted  
+        for val in self.full_song:
+            protected_wav_val = struct.pack('<h', val)  
 
             protected_wav.writeframesraw(protected_wav_val)
 
@@ -113,7 +120,7 @@ def main():
         metadata = create_metadata(args.region_list, args.owner, args.user_secrets_path, regions)
     except ValueError:
         raise ValueError('Ensure all user IDs are integers and all regions are in the provided region_information.json')
-    #protected_song = ProtectedSong(args.infile, metadata)
+    protected_song = ProtectedSong(args.infile, metadata)
 
 
     #RETRIEVE THE RECORDED PINS AND USERS----------------------------
@@ -122,7 +129,8 @@ def main():
         dll = CDLL(lib)
         dll.sha256hash.restype = c_char_p #Override default return type
         dll.encsongkey.restype = c_char_p
-        dll.retrievePub.restype = c_char_p  
+        dll.retrievePub.restype = c_char_p 
+        #dll.enc_song.restype = c_int * protected_song.padlen
 
         f = open('record', 'r')
         ps = f.readlines()
@@ -172,7 +180,36 @@ def main():
     songmap.close()
     #------------------------------------------------------------
 
-    #protected_song.save_secured_song_to_wave(args.outfile)
+    #print("Song Before:")
+    #print(protected_song.full_song[-1-200:-1])
+    #print("Song Length:")
+    
+    #print(protected_song.songlen)
+    #print(protected_song.full_song.dtype)
+    
+    songarr = (c_uint8 * protected_song.songlen)(*protected_song.full_song)
+    encoded = (c_uint8 * protected_song.songlen)(*protected_song.full_song)
+
+    #print(encoded[0])
+    #print(encoded[16])
+    print("Encrypting song...")
+    dll.enc_song(songarr, songK, c_int(protected_song.padlen),encoded)
+    #print("Song After:")
+
+     
+
+    protected_song.full_song = np.array(encoded, dtype=np.int16)
+    #print(protected_song.full_song[0:15])
+    #print(protected_song.full_song[-1-200:-1])
+    #test.astype(int8)
+    #print(protected_song.full_song.dtype)
+
+    #for i in range(15):
+        #print(i)
+     #   print(test[i])
+    #print(np.int16(encoded[1]))
+
+    protected_song.save_secured_song_to_wave(args.outfile)
 
 
 if __name__ == '__main__':
