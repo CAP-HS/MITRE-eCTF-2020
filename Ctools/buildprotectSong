@@ -1,0 +1,10 @@
+#!/bin/bash
+
+gcc -shared -Wl,-soname,setsecs2 -o setsecs2.so -fPIC setsecs2.c sha256.h sha256.c utils.h utils.c ecdh.h ecdh.c constantsA.h aes.h aes_decrypt.h aes_encrypt.h
+
+cp setsecs2.so ../tools/
+
+cd ../tools
+
+./testprotectsongCond --region-list "United States" --region-secrets-path global_provisioning/region.secrets --outfile global_provisioning/audio/demo.drm --infile ../sample-audio/Sound-Bite_One-Small-Step.wav --owner "drew" --user-secrets-path global_provisioning/user.secrets
+
