@@ -52,6 +52,7 @@ void print_help() {
     mp_printf("  play <song.drm>: play the song\r\n");
     mp_printf("  digital_out <song.drm>: play the song to digital out\r\n");
     mp_printf("  exit: exit miPod\r\n");
+    mp_printf(" edmund: just testing\r\n");
     mp_printf("  help: display this message\r\n");
 }
 
@@ -66,6 +67,7 @@ void print_playback_help() {
     mp_printf("  ff: fast forwards 5 seconds(unsupported)\r\n");
     mp_printf("  rw: rewind 5 seconds (unsupported)\r\n");
     mp_printf("  help: display this message\r\n");
+    mp_printf(" Edmund: just testing again\r\n");
 }
 
 

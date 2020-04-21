@@ -16,6 +16,8 @@
 // ADC/DAC sampling rate in Hz
 #define AUDIO_SAMPLING_RATE 48000
 #define BYTES_PER_SAMP 2
+// preview size for a wave file is always 2880000B of the total song
+// in this case, its the first2880000B of the song
 #define PREVIEW_SZ (PREVIEW_TIME_SEC * AUDIO_SAMPLING_RATE * BYTES_PER_SAMP)
 
 // printing utility
