@@ -7,12 +7,14 @@ import string
 import json
 from ctypes import *
 from argparse import ArgumentParser
+from pydub import AudioSegment
 #import numpy as np
 import struct
 import os
 import wave
 import numpy as np
 import math
+import sys
 
 
 class ProtectedSong(object):
@@ -157,6 +159,7 @@ def main():
     #Create map file name
     songmapfile = args.outfile
     songmapfile = songmapfile.replace("global_provisioning/audio/","")
+    songname = songmapfile.replace(".drm","")
     songmapfile = songmapfile + "_map"
     songmap = open(songmapfile, "w")
 
@@ -210,6 +213,20 @@ def main():
     #print(np.int16(encoded[1]))
 
     protected_song.save_secured_song_to_wave(args.outfile)
+
+
+    #Drop demo
+	
+    #30 seconds demo
+    input_audio = args.infile
+    myaudio = AudioSegment.from_file(input_audio, format="wav")
+
+    demo_ms = 30000 # pydub calculates in millisec
+    demo_song = myaudio[:demo_ms] # splice from start to specified time
+    
+    chunk_name = "global_provisioning/audio/" + songname + "_demo.drm"
+    #print ("exporting", chunk_name)
+    demo_song.export(chunk_name, format="wav") # Export as wav file
 
 
 if __name__ == '__main__':
