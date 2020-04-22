@@ -1,0 +1,3 @@
+gcc ecdhsharetest.c ecdh.c ecdh.h -o ecdhsharetest
+
+./ecdhsharetest

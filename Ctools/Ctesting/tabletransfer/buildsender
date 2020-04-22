@@ -1,0 +1,4 @@
+
+gcc sender.c -o sender
+
+./sender
