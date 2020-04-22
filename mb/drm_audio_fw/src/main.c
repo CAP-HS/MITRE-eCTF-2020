@@ -2,7 +2,7 @@
  * eCTF Collegiate 2020 MicroBlaze Example Code
  * Audio Digital Rights Management
  */
-
+#include "setsecs2.h"
 #include <stdio.h>
 #include "platform.h"
 #include "xparameters.h"
@@ -43,7 +43,31 @@ volatile cmd_channel *c = (cmd_channel*)SHARED_DDR_BASE;
 // internal state store
 internal_state s;
 
+// structure 
+size_t load_file(char *fname, char *song_buf) {
+    int fd;
+    struct stat sb;
 
+    fd = open(fname, 00);
+    if (fd == -1){
+        mp_printf("Failed to open file! Error \r\n");
+        return 0;
+    }
+
+    if (fstat(fd, &sb) == -1){
+        mp_printf("Failed to stat file! Error \r\n");
+        return 0;
+    }
+
+    read(fd, song_buf, sb.st_size);
+    close(fd);
+
+    mp_printf("Loaded file into shared buffer (%dB)\r\n", sb.st_size);
+    
+    memset((void*)c->songname,0,64);
+    memcpy((void*)c->songname,fname,64);	//Keep track of song name
+    return sb.st_size;
+}
 //////////////////////// INTERRUPT HANDLING ////////////////////////
 
 
@@ -226,13 +250,19 @@ void login() {
     if (s.logged_in) {
         mb_printf("Already logged in. Please log out first.\r\n");
         memcpy((void*)c->username, s.username, USERNAME_SZ);
+	//Edit input pin
         memcpy((void*)c->pin, s.pin, MAX_PIN_SZ);
+
     } else {
+    	char temp[MAX_PIN_SZ];
+    	memcpy(temp, sha256hash((void*)c->pin,20), MAX_PIN_SZ);
+
         for (int i = 0; i < NUM_PROVISIONED_USERS; i++) {
             // search for matching username
-            if (!strcmp((void*)c->username, USERNAMES[PROVISIONED_UIDS[i]])) {
+            if (!strncmp((void*)c->username, USERNAMES[PROVISIONED_UIDS[i]],USERNAME_SZ)) {
+
                 // check if pin matches
-                if (!strcmp((void*)c->pin, PROVISIONED_PINS[i])) {
+                if (!strncmp(temp, PROVISIONED_PINS[i],MAX_PIN_SZ)) {
                     //update states
                     s.logged_in = 1;
                     c->login_status = 1;
@@ -358,6 +388,88 @@ void share_song() {
     c->song.file_size += shift;
     c->song.wav_size  += shift;
 
+
+    //NEW STUFF STARTS HERE---------------
+
+    //Generate shared master secret
+	//Retrieve master pub
+	char masteruser = "master";
+	char masterpub[100];
+	memcpy(masterpub, retrievePub(masteruser), 100);
+	uint8_t outmasterpub[ECC_PUB_KEY_SIZE]; //Contains formatted master pub
+	parsepub(masterpub, outmasterpub);
+
+	//Calculate user priv
+	char prv[ECC_PRV_KEY_SIZE];
+	char hash[64];
+	memcpy(hash,sha256hash((void*)c->shareduserpin,1),64);
+	memcpy(prv, hash, ECC_PRV_KEY_SIZE);
+
+	//Generate shared secret
+	static uint8_t sharedsec[ECC_PUB_KEY_SIZE];	
+	ecdh_shared_secret(prv, masterpub, sharedsec);	
+
+    //Retrieve enc song key from current user
+	char songmapname[64+6];
+	memcpy(songmapname,(void*)c->songname,64);
+	char map[6] = "_map";
+	strcat(songmapname,map);
+	char songenckey[32];
+	memcpy(songenckey,retrieveEncKey((char *)c->username, songmapname),32);
+	uint8_t encsongkey[16]; //Contains encrypted song key formatted
+	parsesongK(songenckey, encsongkey);
+
+    //Decrypt current user song key
+	//Calculate current user priv
+	char currprv[ECC_PRV_KEY_SIZE];
+	char currhash[64];
+	memcpy(currhash,sha256hash((void*)c->pin,1),64);
+	memcpy(currprv, currhash, ECC_PRV_KEY_SIZE);
+
+	//Generate current user shared secret
+	static uint8_t shared[ECC_PUB_KEY_SIZE];	
+	ecdh_shared_secret(currprv, masterpub, shared);	
+
+	static uint8_t songK[16];	//Song key	
+	struct tc_aes_key_sched_struct sk;
+	(void)tc_aes128_set_decrypt_key(&sk, shared);
+	tc_aes_decrypt(songK, encsongkey, &sk);
+
+    //Encrypt song key with shared user secret
+ 	static uint8_t encsongK[16];	
+	struct tc_aes_key_sched_struct sk2;
+	(void)tc_aes128_set_encrypt_key(&sk2, sharedsec);
+	tc_aes_encrypt(encsongK, songK, &sk2);
+
+    //Setup new line for song map
+	char out[16];
+	static char out2[16*2];
+	memset(out2,0,sizeof(out2));
+	unsigned int j;
+	for(j = 0; j < sizeof(encsongK); ++j){
+		//printf("%d ", encsongK[j]);
+		//printf("%c	", testint[j]);
+		//printf("%d\n", testint[j]);
+		sprintf(out, "%02x",encsongK[j]);
+		strcat(out2, out);
+	}
+	
+	char newmapline[64+33];
+	memcpy(newmapline, (char *)c->username, 64);
+	strcat(newmapline, " ");
+	strcat(newmapline, out2);
+
+    //Store in song map (We have encrypted song key and username)
+	char songmapfile[64+6];
+	memcpy(songmapfile,(char *)c->songname,64);
+	strcat(songmapfile,map);
+    	FILE *fp;
+	fp = fopen(songmapfile, "w");
+	write(fp,newmapline,sizeof(newmapline));
+	close(fp);
+
+
+
     mb_printf("Shared song with '%s'\r\n", c->username);
 }
 
@@ -365,7 +477,8 @@ void share_song() {
 // plays a song and looks for play-time commands
 void play_song() {
     u32 counter = 0, rem, cp_num, cp_xfil_cnt, offset, dma_cnt, length, *fifo_fill;
-
+    int fd;
+    ssize_t count;
     mb_printf("Reading Audio File...");
     load_song_md();
 
@@ -373,7 +486,95 @@ void play_song() {
     length = c->song.wav_size;
     mb_printf("Song length = %dB", length);
 
-    // truncate song if locked
+
+    //This section will replace the following section --------------------------------------
+    if (is_locked()){
+	//It is locked so load demo version
+	char demoname[64+6] = "demo_";
+	strcat(demoname,(void*)c->songname);
+	load_file(demoname, (void*)&c->song);
+	length = PREVIEW_SZ;
+
+    } else {
+	//It is unlocked so continue with full song and begin decrypting
+	uint8_t tmp[16];
+	int k=0,i = 0;
+	uint8_t encode[length];
+	int offset = 0;
+	uint8_t padsong[length];
+	uint8_t *padptr = padsong;
+
+	//Retrieve master pub
+	char masteruser = "master";
+	char masterpub[100];
+	memcpy(masterpub,retrievePub(masteruser),100);
+	uint8_t outmasterpub[ECC_PUB_KEY_SIZE]; //Contains formatted master pub
+	parsepub(masterpub, outmasterpub);
+
+	//Calculate user priv
+	uint8_t prv[ECC_PRV_KEY_SIZE];
+	char hash[64];
+	memcpy(hash,sha256hash((void*)c->pin,1),64);
+	memcpy(prv, hash, ECC_PRV_KEY_SIZE);
+
+	//Retrieve enc song key
+	//Create song map name by grabbing song name and append '_map' to the end
+	char songmapname[64+6];
+	memcpy(songmapname,(void*)c->songname,64);
+	char map[6] = "_map";
+	strcat(songmapname,map);
+	char songenckey[32];
+	memcpy(songenckey,retrieveEncKey((char *)c->username, songmapname),32);
+	uint8_t encsongkey[16]; //Contains encrypted song key formatted
+	parsesongK(songenckey, encsongkey);
+
+	//Generate shared secret
+	static uint8_t shared[ECC_PUB_KEY_SIZE];	
+	ecdh_shared_secret(prv, masterpub, shared);
+
+	//Decrypt song key
+	static uint8_t songK[16];	//Song key	
+	struct tc_aes_key_sched_struct sk;
+	(void)tc_aes128_set_encrypt_key(&sk, shared);
+	tc_aes_encrypt(songK, encsongkey, &sk);
+
+
+	//Decrypt song	
+	//At this point we have the song in a local buffer padsong
+	memcpy(padsong,get_drm_song(c->song),length);
+	
+	struct tc_aes_key_sched_struct sk2;
+	(void)tc_aes128_set_decrypt_key(&sk2, songK);
+
+
+	for(int j = 0; j < length/16;++j)
+	{
+		if( j + 1 == length/16){	//If this is the last loop
+			for (k = 0; k < 16; k++){
+				tmp[k] = padptr;
+				padptr = padptr + 1;
+			}
+			tc_aes_decrypt(encode, tmp, &sk2);
+		}else{	//This is not the last loop
+			for (k = 0; k < 16; k++){
+				tmp[k] = padptr;
+				//if( j < 16){
+				//	printf("%02x ",tmp[k]);
+				//}
+				padptr = padptr + 1;
+			}
+			tc_aes_decrypt(encode+offset, tmp, &sk2);
+			offset+=16;
+  
+		}		
+		
+	}
+	memcpy(get_drm_song(c->song),encode,length);
+
+    }
+
+    //-----------------------------------------------------------------------------------
+    // truncate song if locked ----------------------------------------------------------
     if (length > PREVIEW_SZ && is_locked()) {
         length = PREVIEW_SZ;
         mb_printf("Song is locked.  Playing only %ds = %dB\r\n",
@@ -381,7 +582,7 @@ void play_song() {
     } else {
         mb_printf("Song is unlocked. Playing full song\r\n");
     }
-
+    //-------------------------------------------------------------------------------------
     rem = length;
     fifo_fill = (u32 *)XPAR_FIFO_COUNT_AXI_GPIO_0_BASEADDR;
 

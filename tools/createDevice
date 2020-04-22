@@ -64,7 +64,7 @@ const char *PROVISIONED_PINS[] = {{ {", ".join(['"' + user_secrets[u]['pin'] + '
 
 #endif // SECRETS_H
 ''')
-
+    device_secrets.close()
 
 def get_args():
     """gets arguments from command line"""

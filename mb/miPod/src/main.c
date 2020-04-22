@@ -3,11 +3,10 @@
  * Linux-side DRM driver
  */
 
-
+#include "setsecs2.h"
 #include "miPod.h"
-#include "include/aes.h"
-#include "include/aes_encrypt.h"
-#include "include/aes_decrypt.h"
+#include "aes.h"
+
 /*
 #include "include/ecdh.h"
 #include "include/sha256.h"

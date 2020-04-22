@@ -7,19 +7,37 @@ LD_SRCS += \
 ../src/lscript.ld 
 
 C_SRCS += \
+../src/aes_decrypt.c \
+../src/aes_encrypt.c \
+../src/ecdh.c \
 ../src/main.c \
 ../src/platform.c \
-../src/util.c 
+../src/setsecs2.c \
+../src/sha256.c \
+../src/util.c \
+../src/utils.c 
 
 OBJS += \
+./src/aes_decrypt.o \
+./src/aes_encrypt.o \
+./src/ecdh.o \
 ./src/main.o \
 ./src/platform.o \
-./src/util.o 
+./src/setsecs2.o \
+./src/sha256.o \
+./src/util.o \
+./src/utils.o 
 
 C_DEPS += \
+./src/aes_decrypt.d \
+./src/aes_encrypt.d \
+./src/ecdh.d \
 ./src/main.d \
 ./src/platform.d \
-./src/util.d 
+./src/setsecs2.d \
+./src/sha256.d \
+./src/util.d \
+./src/utils.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
