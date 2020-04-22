@@ -16,7 +16,7 @@
 #include "constants.h"
 #include "sleep.h"
 
-
+#include <sys/stat.h>
 //////////////////////// GLOBALS ////////////////////////
 
 
@@ -63,7 +63,7 @@ size_t load_file(char *fname, char *song_buf) {
     close(fd);
 
     mp_printf("Loaded file into shared buffer (%dB)\r\n", sb.st_size);
-    
+
     memset((void*)c->songname,0,64);
     memcpy((void*)c->songname,fname,64);	//Keep track of song name
     return sb.st_size;

@@ -368,65 +368,6 @@ int main(int argc, char** argv)
     mp_printf("Command channel open at %p (%dB)\r\n", c, sizeof(cmd_channel));
 
 
-    //Otily testing goes here
-
-    /*********************************Testing AES****************************************/
-    static uint8_t secret [16]={
-    	0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-		0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F
-    };
-
-    static uint8_t raw_dat [16] = {
-    		0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09, 0x08,
-			0x07, 0x06, 0x05, 0x04, 0x03, 0x02 ,0x01, 0x00
-    };
-
-    uint8_t encoding[16];
-
-    struct tc_aes_key_sched_struct s;
-    tc_aes128_set_encrypt_key(&s, secret);
-    tc_aes_encrypt(encoding, raw_dat, &s);
-    mp_printf("Test AES enc: ");
-    int i = 0;
-    while (i < 16)
-	{
-    	mp_printf("%02x", encoding[i]);
-    i++;
-
-    }
-    mp_printf("\r\n");
-
-
-/***********************************************Decryption of AES*****************************************/
-
-
-    uint8_t decoding[16];
-    tc_aes128_set_decrypt_key(&s, secret);
-    tc_aes_decrypt(decoding, encoding, &s);
-    mp_printf("Test Decrypt AES :");
-    int j = 0;
-       	while (j < 16)
-    	{
-        	mp_printf("%02x", decoding[i]);
-        	//printf("%02x", decoding[i]);	//Wont print mp>
-        j++;
-        }
-        mp_printf("\r\n");
-
-
-
-  /******************************End of Test AES****************************************/
-
-    // end of otily testing
-
-
-/******************************Testing SHA256********************************************/
-
-/******************************End of Testing for SHA256********************************/
-
-
-/*****************************Testing ECDH*******************************************/
-/*****************************End of ecdh Testing***********************************/
 
     // dump player information before command loop
     query_player();
