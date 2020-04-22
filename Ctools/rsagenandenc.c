@@ -72,7 +72,7 @@ char *sha256hash(char* input,int n)
 			//printf("%s\n", out2);
 			sprintf(out, "%02x",digest[i]); //Debug
 			//printf("%s\n",out2);
-			strcat(out2, out);
+			strncat(out2, out);
 			//printf("%02x\n",h);
 		}
 		//Debug: For loop is to carry out 3 iterations of calling function sha256_1

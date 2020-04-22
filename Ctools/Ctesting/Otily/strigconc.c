@@ -38,11 +38,11 @@ int read_file()
     fptr = fopen("user_pins.txt", "r") ;
     while (fscanf(fptr, "%s", data) != EOF);
 
-    tkptr = strtok(data, ":");
+    tkptr = strtok_r(data, ":");
 
     while(tkptr != NULL)
     {
-    tkptr = strtok(NULL,":");
+    tkptr = strtok_r(NULL,":");
     printf("This is token number %d %s\n", n, tkptr);
     tokens[++n] = tkptr; 
     n=n+1;

@@ -41,8 +41,8 @@ int main(){
 		printf("%c	", out2[j]);
 		printf("%c	", testint[j]);
 		printf("%d\n", testint[j]);
-		sprintf(out, "%c",testint[j]); //Debug
-		strcat(out2, out);
+		snprintf(out, "%c",testint[j]); //Debug
+		strncat(out2, out);
 	}
 
 	//printf("%s", out2);
@@ -51,7 +51,7 @@ int main(){
 
 	//char endstring[20];
 	//memset(endstring, 0, sizeof(endstring));
-	//sprintf(endstring, "%c", testint);
+	//snprintf(endstring, "%c", testint);
 
 	printf("Marker 1:	%s\n", out2);
 

@@ -41,8 +41,8 @@ char* sha256hash(char *input,int n)
 		memset(out2, 0, sizeof(out2));//Debug: cure to extra characters
 		
 		for (i = 0; i < sizeof(digest); ++i) {
-			sprintf(out, "%02x",digest[i]); //Debug
-			strcat(out2, out);
+			snprintf(out, "%02x",digest[i]); //Debug
+			strncat(out2, out);
 		}
 		input = out2;
 		
@@ -122,10 +122,10 @@ struct User *getKeys(char *input)
 	//struct User user;
 	//memcpy(user.name,name,sizeof(name));
 	printf("SHow name: %s\n",name);
-	sprintf(user.name,name);
+	snprintf(user.name,name);
 	user.publ = pub;
 	memcpy(user.priv, ciphertext, sizeof(ciphertext));
-	sprintf(user.passcheck, sha256hash(input, 20));
+	snprintf(user.passcheck, sha256hash(input, 20));
 
         printf("SHow name2: %s\n",user.name);
 	

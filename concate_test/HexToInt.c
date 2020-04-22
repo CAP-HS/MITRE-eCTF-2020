@@ -57,10 +57,10 @@ int main()
     {
         a = (int) test[i];
         printf("this still works \n");
-        sprintf(sr1, "%d", a);
+        snprintf(sr1, "%d", a);
         printf("%s \n", sr1);
         //This is where I am having a problem with this concatenation
-        //strcat(sr1, sr1);
+        //strncat(sr1, sr1);
         printf("still working \n");
     }
     

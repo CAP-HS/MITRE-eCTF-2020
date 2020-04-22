@@ -121,7 +121,7 @@ int importUsermap(char users[64][16], char pubs[64][100])
 	printf("\n");
 	while (fgets(str, siz, fp) != NULL){
         	//printf("%s", str);
-		tokenPtr = strtok (str, " ");
+		tokenPtr = strtok_r (str, " ");
 		char * tokens [100]; //Need a dynamic assignation in real time or exact value as required
 		int count = 0;
 
@@ -129,16 +129,16 @@ int importUsermap(char users[64][16], char pubs[64][100])
 		{
 			tokens[count] = tokenPtr; //tokens holds the strings you require
 			count = count + 1;
-			tokenPtr = strtok(NULL, " ");
+			tokenPtr = strtok_r(NULL, " ");
 		}
-		//sprintf(temp,"%s", tokens[0]);
-		//sprintf(temp2,"%s", tokens[1]);
+		//snprintf(temp,"%s", tokens[0]);
+		//snprintf(temp2,"%s", tokens[1]);
 
 		//printf("%s	%d\n", temp,ind);
 		//printf("%d\n", ind);
 		//temp[ind] = tokens[0];
-		strcpy(users[ind],tokens[0]);
-		strcpy(pubs[ind],tokens[1]);
+		strncpy(users[ind],tokens[0]);
+		strncpy(pubs[ind],tokens[1]);
 		//printf("%s	%s\n",users[0], users[ind]);
 
 		//memset(tokens, 0, 100);
@@ -167,7 +167,7 @@ char* retrievePub(char *user)
 	unsigned int p;
 	int index = 0;
 	for (p=0;p<64;++p){
-		if (strcmp(user,users[p]) == 0){
+		if (strncpm(user,users[p]) == 0){
 			printf("Found index: %d\n	", p);
 			index = p;
 			found = 0;
@@ -176,7 +176,7 @@ char* retrievePub(char *user)
 		//printf("%s\n", user);
 	}
 	if (found == 0){
-		strcpy(retrieved,pubs[index]);
+		strncpy(retrieved,pubs[index]);
 		printf("%s\n", retrieved);
 	}
 	else{
@@ -231,7 +231,7 @@ int importSongmap(char songusers[64][16], char songencKeys[64][32], char* filena
 	printf("\n");
 	while (fgets(str, siz, fp) != NULL){
         	//printf("%s", str);
-		tokenPtr = strtok (str, " ");
+		tokenPtr = strtok_r (str, " ");
 		char * tokens [50]; //Need a dynamic assignation in real time or exact value as required
 		int count = 0;
 
@@ -239,16 +239,16 @@ int importSongmap(char songusers[64][16], char songencKeys[64][32], char* filena
 		{
 			tokens[count] = tokenPtr; //tokens holds the strings you require
 			count = count + 1;
-			tokenPtr = strtok(NULL, " ");
+			tokenPtr = strtok_r(NULL, " ");
 		}
-		//sprintf(temp,"%s", tokens[0]);
-		//sprintf(temp2,"%s", tokens[1]);
+		//snprintf(temp,"%s", tokens[0]);
+		//snprintf(temp2,"%s", tokens[1]);
 
 		//printf("%s	%d\n", temp,ind);
 		//printf("%d\n", ind);
 		//temp[ind] = tokens[0];
-		strcpy(songusers[ind],tokens[0]);
-		strcpy(songencKeys[ind],tokens[1]);
+		strncpy(songusers[ind],tokens[0]);
+		strncpy(songencKeys[ind],tokens[1]);
 		//printf("%s	%s\n",songusers[0], songusers[ind]);
 
 		//memset(tokens, 0, 50);
@@ -274,7 +274,7 @@ char* retrieveEncKey(char *user, char* filename)
 	unsigned int p;
 	int index = 0;
 	for (p=0;p<64;++p){
-		if (strcmp(user,songusers[p]) == 0){
+		if (strncpm(user,songusers[p]) == 0){
 			printf("Found index: %d\n	", p);
 			index = p;
 			found = 0;
@@ -283,7 +283,7 @@ char* retrieveEncKey(char *user, char* filename)
 		//printf("%s\n", user);
 	}
 	if (found == 0){
-		strcpy(retrievedKey,songencKeys[index]);
+		strncpy(retrievedKey,songencKeys[index]);
 		printf("%s\n", retrievedKey);
 	}
 	else{
@@ -327,8 +327,8 @@ char* sha256hash(char *input,int n)
 		memset(out2, 0, sizeof(out2));//Debug: cure to extra characters
 		
 		for (i = 0; i < sizeof(digest); ++i) {
-			sprintf(out, "%02x",digest[i]); //Debug
-			strcat(out2, out);
+			snprintf(out, "%02x",digest[i]); //Debug
+			strncat(out2, out);
 		}
 		input = out2;
 		
@@ -422,8 +422,8 @@ char* getkeystring(char *input)
 		printf("%d ", pub[j]);
 		//printf("%c	", testint[j]);
 		//printf("%d\n", testint[j]);
-		sprintf(out, "%02x",pub[j]); //Debug
-		strcat(out2, out);
+		snprintf(out, "%02x",pub[j]); //Debug
+		strncat(out2, out);
 	}
 
 	input = out2;
@@ -468,8 +468,8 @@ char* encsongkey(char *userpriv,char *masterpub,char *songkey)
 		//printf("%d ", encsongK[j]);
 		//printf("%c	", testint[j]);
 		//printf("%d\n", testint[j]);
-		sprintf(out, "%02x",encsongK[j]);
-		strcat(out2, out);
+		snprintf(out, "%02x",encsongK[j]);
+		strncat(out2, out);
 	}
 
 	//printf("Encrypted song key inside: %s", out2);

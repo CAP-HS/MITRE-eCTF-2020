@@ -41,8 +41,8 @@ int main(){
 		printf("%c	", out2[j]);
 		printf("%c	", testint[j]);
 		printf("%d\n", testint[j]);
-		sprintf(out, "%c",testint[j]); //Debug
-		strcat(out2, out);
+		snprintf(out, "%c",testint[j]); //Debug
+		strncat(out2, out);
 		//
 		
 

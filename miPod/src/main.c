@@ -36,9 +36,9 @@ void send_command(int cmd) {
 // parses the input of a command with up to two arguments
 // any arguments not present will be set to NULL
 void parse_input(char *input, char **cmd, char **arg1, char **arg2) {
-    *cmd = strtok(input, " \r\n");
-    *arg1 = strtok(NULL, " \r\n");
-    *arg2 = strtok(NULL, " \r\n");
+    *cmd = strtok_r(input, " \r\n");
+    *arg1 = strtok_r(NULL, " \r\n");
+    *arg2 = strtok_r(NULL, " \r\n");
 }
 
 
@@ -108,8 +108,8 @@ void login(char *username, char *pin) {
     }
 
     // drive DRM
-    strcpy((void*)c->username, username);
-    strcpy((void*)c->pin, pin);
+    strncpy((void*)c->username, username);
+    strncpy((void*)c->pin, pin);
     send_command(LOGIN);
 }
 
@@ -199,7 +199,7 @@ void share_song(char *song_name, char *username) {
         return;
     }
 
-    strcpy((char *)c->username, username);
+    strncpy((char *)c->username, username);
 
     // drive DRM
     send_command(SHARE);
@@ -267,31 +267,31 @@ int play_song(char *song_name) {
         parse_input(usr_cmd, &cmd, &arg1, &arg2);
         if (!cmd) {
             continue;
-        } else if (!strcmp(cmd, "help")) {
+        } else if (!strncpm(cmd, "help")) {
             print_playback_help();
-        } else if (!strcmp(cmd, "resume")) {
+        } else if (!strncpm(cmd, "resume")) {
             send_command(PLAY);
             usleep(200000); // wait for DRM to print
-        } else if (!strcmp(cmd, "pause")) {
+        } else if (!strncpm(cmd, "pause")) {
             send_command(PAUSE);
             usleep(200000); // wait for DRM to print
-        } else if (!strcmp(cmd, "stop")) {
+        } else if (!strncpm(cmd, "stop")) {
             send_command(STOP);
             usleep(200000); // wait for DRM to print
             break;
-        } else if (!strcmp(cmd, "restart")) {
+        } else if (!strncpm(cmd, "restart")) {
             send_command(RESTART);
-        } else if (!strcmp(cmd, "exit")) {
+        } else if (!strncpm(cmd, "exit")) {
             mp_printf("Exiting...\r\n");
             send_command(STOP);
             return -1;
-        } else if (!strcmp(cmd, "rw")) {
+        } else if (!strncpm(cmd, "rw")) {
             mp_printf("Unsupported feature.\r\n\r\n");
             print_playback_help();
-        } else if (!strcmp(cmd, "ff")) {
+        } else if (!strncpm(cmd, "ff")) {
             mp_printf("Unsupported feature.\r\n\r\n");
             print_playback_help();
-        } else if (!strcmp(cmd, "lyrics")) {
+        } else if (!strncpm(cmd, "lyrics")) {
             mp_printf("Unsupported feature.\r\n\r\n");
             print_playback_help();
         } else {
@@ -321,7 +321,7 @@ void digital_out(char *song_name) {
 
     // open digital output file
     int written = 0, wrote, length = c->song.file_size + 8;
-    sprintf(fname, "%s.dout", song_name);
+    snprintf(fname, "%s.dout", song_name);
     int fd = open(fname, O_WRONLY | O_CREAT | O_TRUNC);
     if (fd == -1){
         mp_printf("Failed to open file! Error = %d\r\n", errno);
@@ -375,24 +375,24 @@ int main(int argc, char** argv)
         parse_input(usr_cmd, &cmd, &arg1, &arg2);
         if (!cmd) {
             continue;
-        } else if (!strcmp(cmd, "help")) {
+        } else if (!strncpm(cmd, "help")) {
             print_help();
-        } else if (!strcmp(cmd, "login")) {
+        } else if (!strncpm(cmd, "login")) {
             login(arg1, arg2);
-        } else if (!strcmp(cmd, "logout")) {
+        } else if (!strncpm(cmd, "logout")) {
             logout();
-        } else if (!strcmp(cmd, "query")) {
+        } else if (!strncpm(cmd, "query")) {
             query_song(arg1);
-        } else if (!strcmp(cmd, "play")) {
+        } else if (!strncpm(cmd, "play")) {
             // break if exit was commanded in play loop
             if (play_song(arg1) < 0) {
                 break;
             }
-        } else if (!strcmp(cmd, "digital_out")) {
+        } else if (!strncpm(cmd, "digital_out")) {
             digital_out(arg1);
-        } else if (!strcmp(cmd, "share")) {
+        } else if (!strncpm(cmd, "share")) {
             share_song(arg1, arg2);
-        } else if (!strcmp(cmd, "exit")) {
+        } else if (!strncpm(cmd, "exit")) {
             mp_printf("Exiting...\r\n");
             break;
         } else {
