@@ -13,7 +13,7 @@ from argparse import ArgumentParser
 import string 
 import random
 
-
+import os
 
 #Creates random password
 def randomStringDigits(stringLength=10):
@@ -142,6 +142,8 @@ def main(user_list, outfile):
 
     usermap.close()
 
+    os.system('cp user_map.txt ../miPod/src/user_map.txt')
+    os.system('cp user_map.txt ../mb/drm_audio_fw/src/user_map.txt')
 
 
 
