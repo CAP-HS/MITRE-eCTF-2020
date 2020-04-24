@@ -9,8 +9,9 @@
 #include "constantsA.h"
 
 #include <inttypes.h>
-#include "aes_decrypt.h"
-#include "aes_encrypt.h"
+#include "aes.h"
+//#include "aes_decrypt.h"
+//#include "aes_encrypt.h"
 
 #define NUM_OF_NIST_KEYS 16
 
