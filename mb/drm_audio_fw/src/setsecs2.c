@@ -111,7 +111,6 @@ int importUsermap(char users[64][16], char pubs[64][100])
 
 	fp = fopen(filename, "r");
 	int ind = 0;
-	printf("\n");
 	while (fgets(str, siz, fp) != NULL){
 
 		tokenPtr = strtok (str, " ");
@@ -196,7 +195,6 @@ int importSongmap(char songusers[64][16], char songencKeys[64][32], char* filena
 
 	fp = fopen(filename, "r");
 	int ind = 0;
-	printf("\n");
 	while (fgets(str, siz, fp) != NULL){
 		tokenPtr = strtok (str, " ");
 		char * tokens [50]; //Need a dynamic assignation in real time or exact value as required
@@ -238,8 +236,6 @@ char* retrieveEncKey(char *user, char* filename)
 			index = p;
 			found = 0;
 		}
-		//printf("%s	", users[p]);
-		//printf("%s\n", user);
 	}
 	if (found == 0){
 		strcpy(retrievedKey,songencKeys[index]);
@@ -249,8 +245,6 @@ char* retrieveEncKey(char *user, char* filename)
 
 	}
 
-	//printf("Retrieved User:	%s\n", users[1]);
-	//printf("Retrieved Pub key:	%s\n", pubs[1]);
 
 	return retrievedKey;
 }

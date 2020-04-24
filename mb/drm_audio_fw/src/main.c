@@ -51,19 +51,19 @@ size_t load_file(char *fname, char *song_buf) {
 
     fd = open(fname, 00);
     if (fd == -1){
-        mp_printf("Failed to open file! Error \r\n");
+        mb_printf("Failed to open file! Error \r\n");
         return 0;
     }
 
     if (fstat(fd, &sb) == -1){
-        mp_printf("Failed to stat file! Error \r\n");
+        mb_printf("Failed to stat file! Error \r\n");
         return 0;
     }
 
     read(fd, song_buf, sb.st_size);
     close(fd);
 
-    mp_printf("Loaded file into shared buffer (%dB)\r\n", sb.st_size);
+    mb_printf("Loaded file into shared buffer (%dB)\r\n", sb.st_size);
 
     memset((void*)c->songname,0,64);
     Xil_MemCpy((void*)c->songname,fname,64);	//Keep track of song name
@@ -448,9 +448,6 @@ void share_song() {
 	memset(out2,0,sizeof(out2));
 	unsigned int j;
 	for(j = 0; j < sizeof(encsongK); ++j){
-		//printf("%d ", encsongK[j]);
-		//printf("%c	", testint[j]);
-		//printf("%d\n", testint[j]);
 		xil_sprintf(out, "%02x",encsongK[j]);
 		strcat(out2, out);
 	}

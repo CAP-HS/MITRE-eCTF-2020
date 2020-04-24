@@ -76,10 +76,10 @@ int tc_sha256_update(TCSha256State_t s, const uint8_t *data, size_t datalen)
 	/* input sanity check: */
 	if (s == (TCSha256State_t) 0 ||
 	    data == (void *) 0) {
-		printf("%s", "fail"); //Debug
+		xil_printf("%s", "fail"); //Debug
 		return TC_CRYPTO_FAIL;
 	} else if (datalen == 0) {
-		printf("%s", "pass"); //Debug
+		xil_printf("%s", "pass"); //Debug
 		return TC_CRYPTO_SUCCESS;
 	}
 
