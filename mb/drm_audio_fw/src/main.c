@@ -15,6 +15,7 @@
 #include "xintc.h"
 #include "constants.h"
 #include "sleep.h"
+//#include "xil_sprintf.h"
 
 #include <sys/stat.h>
 //////////////////////// GLOBALS ////////////////////////
@@ -65,7 +66,7 @@ size_t load_file(char *fname, char *song_buf) {
     mp_printf("Loaded file into shared buffer (%dB)\r\n", sb.st_size);
 
     memset((void*)c->songname,0,64);
-    memcpy((void*)c->songname,fname,64);	//Keep track of song name
+    Xil_MemCpy((void*)c->songname,fname,64);	//Keep track of song name
     return sb.st_size;
 }
 //////////////////////// INTERRUPT HANDLING ////////////////////////
@@ -174,8 +175,8 @@ void load_song_md() {
     s.song_md.owner_id = c->song.md.owner_id;
     s.song_md.num_regions = c->song.md.num_regions;
     s.song_md.num_users = c->song.md.num_users;
-    memcpy(s.song_md.rids, (void *)get_drm_rids(c->song), s.song_md.num_regions);
-    memcpy(s.song_md.uids, (void *)get_drm_uids(c->song), s.song_md.num_users);
+    Xil_MemCpy(s.song_md.rids, (void *)get_drm_rids(c->song), s.song_md.num_regions);
+    Xil_MemCpy(s.song_md.uids, (void *)get_drm_uids(c->song), s.song_md.num_users);
 }
 
 
@@ -234,8 +235,8 @@ int gen_song_md(char *buf) {
     buf[1] = s.song_md.owner_id;
     buf[2] = s.song_md.num_regions;
     buf[3] = s.song_md.num_users;
-    memcpy(buf + 4, s.song_md.rids, s.song_md.num_regions);
-    memcpy(buf + 4 + s.song_md.num_regions, s.song_md.uids, s.song_md.num_users);
+    Xil_MemCpy(buf + 4, s.song_md.rids, s.song_md.num_regions);
+    Xil_MemCpy(buf + 4 + s.song_md.num_regions, s.song_md.uids, s.song_md.num_users);
 
     return buf[0];
 }
@@ -249,13 +250,13 @@ int gen_song_md(char *buf) {
 void login() {
     if (s.logged_in) {
         mb_printf("Already logged in. Please log out first.\r\n");
-        memcpy((void*)c->username, s.username, USERNAME_SZ);
+        Xil_MemCpy((void*)c->username, s.username, USERNAME_SZ);
 	//Edit input pin
-        memcpy((void*)c->pin, s.pin, MAX_PIN_SZ);
+        Xil_MemCpy((void*)c->pin, s.pin, MAX_PIN_SZ);
 
     } else {
     	char temp[MAX_PIN_SZ];
-    	memcpy(temp, sha256hash((void*)c->pin,20), MAX_PIN_SZ);
+    	Xil_MemCpy(temp, sha256hash((void*)c->pin,20), MAX_PIN_SZ);
 
         for (int i = 0; i < NUM_PROVISIONED_USERS; i++) {
             // search for matching username
@@ -266,8 +267,8 @@ void login() {
                     //update states
                     s.logged_in = 1;
                     c->login_status = 1;
-                    memcpy(s.username, (void*)c->username, USERNAME_SZ);
-                    memcpy(s.pin, (void*)c->pin, MAX_PIN_SZ);
+                    Xil_MemCpy(s.username, (void*)c->username, USERNAME_SZ);
+                    Xil_MemCpy(s.pin, (void*)c->pin, MAX_PIN_SZ);
                     s.uid = PROVISIONED_UIDS[i];
                     mb_printf("Logged in for user '%s'\r\n", c->username);
                     return;
@@ -382,7 +383,7 @@ void share_song() {
     if (shift) {
         memmove((void *)get_drm_song(c->song) + shift, (void *)get_drm_song(c->song), c->song.wav_size);
     }
-    memcpy((void *)&c->song.md, new_md, new_md_len);
+    Xil_MemCpy((void *)&c->song.md, new_md, new_md_len);
 
     // update file size
     c->song.file_size += shift;
@@ -395,15 +396,15 @@ void share_song() {
 	//Retrieve master pub
 	char masteruser = "master";
 	char masterpub[100];
-	memcpy(masterpub, retrievePub(masteruser), 100);
+	Xil_MemCpy(masterpub, retrievePub(masteruser), 100);
 	uint8_t outmasterpub[ECC_PUB_KEY_SIZE]; //Contains formatted master pub
 	parsepub(masterpub, outmasterpub);
 
 	//Calculate user priv
 	char prv[ECC_PRV_KEY_SIZE];
 	char hash[64];
-	memcpy(hash,sha256hash((void*)c->shareduserpin,1),64);
-	memcpy(prv, hash, ECC_PRV_KEY_SIZE);
+	Xil_MemCpy(hash,sha256hash((void*)c->shareduserpin,1),64);
+	Xil_MemCpy(prv, hash, ECC_PRV_KEY_SIZE);
 
 	//Generate shared secret
 	static uint8_t sharedsec[ECC_PUB_KEY_SIZE];	
@@ -411,11 +412,11 @@ void share_song() {
 
     //Retrieve enc song key from current user
 	char songmapname[64+6];
-	memcpy(songmapname,(void*)c->songname,64);
+	Xil_MemCpy(songmapname,(void*)c->songname,64);
 	char map[6] = "_map";
 	strcat(songmapname,map);
 	char songenckey[32];
-	memcpy(songenckey,retrieveEncKey((char *)c->username, songmapname),32);
+	Xil_MemCpy(songenckey,retrieveEncKey((char *)c->username, songmapname),32);
 	uint8_t encsongkey[16]; //Contains encrypted song key formatted
 	parsesongK(songenckey, encsongkey);
 
@@ -423,8 +424,8 @@ void share_song() {
 	//Calculate current user priv
 	char currprv[ECC_PRV_KEY_SIZE];
 	char currhash[64];
-	memcpy(currhash,sha256hash((void*)c->pin,1),64);
-	memcpy(currprv, currhash, ECC_PRV_KEY_SIZE);
+	Xil_MemCpy(currhash,sha256hash((void*)c->pin,1),64);
+	Xil_MemCpy(currprv, currhash, ECC_PRV_KEY_SIZE);
 
 	//Generate current user shared secret
 	static uint8_t shared[ECC_PUB_KEY_SIZE];	
@@ -450,18 +451,18 @@ void share_song() {
 		//printf("%d ", encsongK[j]);
 		//printf("%c	", testint[j]);
 		//printf("%d\n", testint[j]);
-		sprintf(out, "%02x",encsongK[j]);
+		xil_sprintf(out, "%02x",encsongK[j]);
 		strcat(out2, out);
 	}
 	
 	char newmapline[64+33];
-	memcpy(newmapline, (char *)c->username, 64);
+	Xil_MemCpy(newmapline, (char *)c->username, 64);
 	strcat(newmapline, " ");
 	strcat(newmapline, out2);
 
     //Store in song map (We have encrypted song key and username)
 	char songmapfile[64+6];
-	memcpy(songmapfile,(char *)c->songname,64);
+	Xil_MemCpy(songmapfile,(char *)c->songname,64);
 	strcat(songmapfile,map);
     	FILE *fp;
 	fp = fopen(songmapfile, "w");
@@ -507,24 +508,24 @@ void play_song() {
 	//Retrieve master pub
 	char masteruser = "master";
 	char masterpub[100];
-	memcpy(masterpub,retrievePub(masteruser),100);
+	Xil_MemCpy(masterpub,retrievePub(masteruser),100);
 	uint8_t outmasterpub[ECC_PUB_KEY_SIZE]; //Contains formatted master pub
 	parsepub(masterpub, outmasterpub);
 
 	//Calculate user priv
 	uint8_t prv[ECC_PRV_KEY_SIZE];
 	char hash[64];
-	memcpy(hash,sha256hash((void*)c->pin,1),64);
-	memcpy(prv, hash, ECC_PRV_KEY_SIZE);
+	Xil_MemCpy(hash,sha256hash((void*)c->pin,1),64);
+	Xil_MemCpy(prv, hash, ECC_PRV_KEY_SIZE);
 
 	//Retrieve enc song key
 	//Create song map name by grabbing song name and append '_map' to the end
 	char songmapname[64+6];
-	memcpy(songmapname,(void*)c->songname,64);
+	Xil_MemCpy(songmapname,(void*)c->songname,64);
 	char map[6] = "_map";
 	strcat(songmapname,map);
 	char songenckey[32];
-	memcpy(songenckey,retrieveEncKey((char *)c->username, songmapname),32);
+	Xil_MemCpy(songenckey,retrieveEncKey((char *)c->username, songmapname),32);
 	uint8_t encsongkey[16]; //Contains encrypted song key formatted
 	parsesongK(songenckey, encsongkey);
 
@@ -541,7 +542,7 @@ void play_song() {
 
 	//Decrypt song	
 	//At this point we have the song in a local buffer padsong
-	memcpy(padsong,get_drm_song(c->song),length);
+	Xil_MemCpy(padsong,get_drm_song(c->song),length);
 	
 	struct tc_aes_key_sched_struct sk2;
 	(void)tc_aes128_set_decrypt_key(&sk2, songK);
@@ -569,7 +570,7 @@ void play_song() {
 		}		
 		
 	}
-	memcpy(get_drm_song(c->song),encode,length);
+	Xil_MemCpy(get_drm_song(c->song),encode,length);
 
     }
 

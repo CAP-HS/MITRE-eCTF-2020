@@ -15,7 +15,8 @@ C_SRCS += \
 ../src/setsecs2.c \
 ../src/sha256.c \
 ../src/util.c \
-../src/utils.c 
+../src/utils.c \
+../src/xil_sprintf.c 
 
 OBJS += \
 ./src/aes_decrypt.o \
@@ -26,7 +27,8 @@ OBJS += \
 ./src/setsecs2.o \
 ./src/sha256.o \
 ./src/util.o \
-./src/utils.o 
+./src/utils.o \
+./src/xil_sprintf.o 
 
 C_DEPS += \
 ./src/aes_decrypt.d \
@@ -37,7 +39,8 @@ C_DEPS += \
 ./src/setsecs2.d \
 ./src/sha256.d \
 ./src/util.d \
-./src/utils.d 
+./src/utils.d \
+./src/xil_sprintf.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
