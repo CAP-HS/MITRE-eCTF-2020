@@ -7,11 +7,11 @@
 
 #include "sha256.h"
 #include "constantsA.h"
-#include "aes.h"
-#include <inttypes.h>
 
-//#include "aes_decrypt.c"
-//#include "aes_encrypt.c"
+#include <inttypes.h>
+#include "aes.h"
+//#include "aes_decrypt.h"
+//#include "aes_encrypt.h"
 
 #define NUM_OF_NIST_KEYS 16
 
